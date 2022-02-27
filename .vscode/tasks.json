@@ -1,0 +1,37 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "编译ui文件",
+            "type": "shell",
+            "command": "pyuic5 -o ${workspaceFolder}/src/MainWindow.py ${workspaceFolder}/ui/MainWindow.ui",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "编译资源文件",
+            "type": "shell",
+            "command": "pyrcc5 -o ${workspaceFolder}/src/MainWindow_rc.py ${workspaceFolder}/ui/MainWindow.qrc",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "打包可执行文件",
+            "type": "shell",
+            "command": "pyinstaller ${workspaceFolder}/src/Main.py -F -w -p ${workspaceFolder}/src/MainWindow.py -p ${workspaceFolder}/src/MainWindow_rc.py -p ${workspaceFolder}/src/tools.py --distpath ${workspaceFolder}/dist",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
