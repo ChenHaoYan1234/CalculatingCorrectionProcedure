@@ -4,12 +4,11 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "name": "调试主程序",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/Main.py",
+            "program": "${workspaceFolder}\\src\\Main.py",
             "console": "integratedTerminal"
         }
     ]
