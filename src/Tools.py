@@ -2,6 +2,8 @@ import base64
 import csv
 import getpass
 import os
+from sys import argv
+import threading
 import requests
 import win32api
 import win32con
@@ -10,17 +12,16 @@ import win32ui
 
 def getPhoto() -> bytes:
     dlg = win32ui.CreateFileDialog(1)
-    dlg.SetOFNInitialDir('C:/')
+    dlg.SetOFNInitialDir("C:\\Users\\" + getpass.getuser() + "\\Desktop\\")
     dlg.DoModal()
     filename: str = dlg.GetPathName()
-    if os.path.isfile(filename) and filename.split(".")[-1] in ["jpg", "jpge", "png", "bmp"]:
-        f = open(filename, 'rb')
-        img = base64.b64encode(f.read())
-        f.close()
+    if os.path.isfile(filename):
+        file = open(filename, 'rb')
+        img = base64.b64encode(file.read())
+        file.close()
         return img
     else:
-        win32api.MessageBox(0, "请选择一张图片!", "", win32con.MB_OK)
-        return False
+        win32api.MessageBox(0, "请选择一张图片！", "", win32con.MB_OK)
 
 
 def getAccessToken(client_id: str, client_secret: str) -> str:
@@ -93,15 +94,13 @@ def resultParser(result: dict) -> list:
         temp_right = "✓" if (float(temp_handwriting) == temp_answer) else "✗"
         temp_print.replace("*", "×")
         temp_print.replace("/", "÷")
-        print(temp_print)
         temp_result = [temp_print, temp_handwriting, temp_answer, temp_right]
         result_list.append(temp_result)
     return result_list
 
 
 def saveResult(result: list) -> None:
-    #fspec = "CSV File (*.csv)|*.csv|All Files (*.*)|*.*|"
-    dlg = win32ui.CreateFileDialog(0)#,None,None,None,fspec)
+    dlg = win32ui.CreateFileDialog(0)
     dlg.SetOFNInitialDir("C:\\Users\\" + getpass.getuser() + "\\Desktop\\")
     dlg.DoModal()
     path: str = dlg.GetPathName()
