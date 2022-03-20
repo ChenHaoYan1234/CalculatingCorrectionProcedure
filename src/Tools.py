@@ -4,11 +4,9 @@ import getpass
 import os
 import time
 import requests
+import ImageData
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QWidget
-import sqlite3
 
-def getConnect(db_name:str):
-    return sqlite3.connect(db_name)
 
 def getPath(mode: int, window: QMainWindow | QWidget | None = None):
     if mode == 0:
@@ -87,7 +85,9 @@ def hasProp(obj: dict, prop: str):
         return False
 
 
-def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: QMainWindow | QWidget | None = None) -> dict:
+def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: QMainWindow | QWidget | None = None, db: ImageData.ImageData = None) -> dict:
+    if db.getResultFromImage(base64_photo) != None:
+        return db.getResultFromImage(base64_photo)
     host = "https://aip.baidubce.com/rest/2.0/ocr/v1/doc_analysis"
     params = {"image": base64_photo,
               "language_type": "CHN_ENG", "result_type": "big"}
@@ -105,11 +105,12 @@ def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: 
             QMessageBox.StandardButton.Retry
         )
         if msg == QMessageBox.StandardButton.Retry:
-            return getDistinguishResult(base64_photo, access_token, window)
+            return getDistinguishResult(base64_photo, access_token, window,db)
         else:
             return False
     if response and (not ("error_msg" in response.json())):
         result = response.json()
+        db.newResult(base64_photo,result)
         return result
     else:
         msg = QMessageBox.critical(
@@ -122,7 +123,7 @@ def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: 
         )
         print(response.json())
         if msg == QMessageBox.StandardButton.Retry:
-            return getDistinguishResult(base64_photo, access_token, window)
+            return getDistinguishResult(base64_photo, access_token, window,db)
         else:
             return False
 
@@ -218,8 +219,8 @@ def saveResult(result: list, mode: int, window: QWidget | QMainWindow | None = N
                 QMessageBox.StandardButton.Retry
             )
             if msg == QMessageBox.StandardButton.Retry:
-                
-                saveResult(result,mode,window,file_list)
+
+                saveResult(result, mode, window, file_list)
             else:
                 pass
     except PermissionError:
