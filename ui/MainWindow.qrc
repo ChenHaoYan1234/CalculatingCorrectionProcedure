@@ -1,5 +1,6 @@
 <RCC>
-  <qresource prefix="WaitIcon">
+  <qresource prefix="Image">
     <file>loading.gif</file>
+    <file>background.jpg</file>
   </qresource>
 </RCC>

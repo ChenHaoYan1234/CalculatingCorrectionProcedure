@@ -30,7 +30,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Author.setGeometry(QtCore.QRect(10, 480, 100, 10))
         self.Author.setObjectName("Author")
         self.Version = QtWidgets.QLabel(self.Main)
-        self.Version.setGeometry(QtCore.QRect(10, 460, 40, 10))
+        self.Version.setGeometry(QtCore.QRect(10, 460, 100, 10))
         self.Version.setObjectName("Version")
         self.Title = QtWidgets.QLabel(self.Main)
         self.Title.setGeometry(QtCore.QRect(160, 60, 280, 60))
@@ -68,10 +68,31 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.WaitIcon = QtWidgets.QLabel(self.Wait)
         self.WaitIcon.setGeometry(QtCore.QRect(100, 150, 200, 200))
         self.WaitIcon.setText("")
-        self.WaitGif = QtGui.QMovie(":/WaitIcon/loading.gif")
+        self.WaitGif = QtGui.QMovie(":/Image/loading.gif")
         self.WaitIcon.setMovie(self.WaitGif)
         self.WaitGif.start()
         self.WaitIcon.setObjectName("WaitIcon")
+        self.bg_1 = QtGui.QPixmap(":/Image/background.jpg")
+        self.bg_2 = QtGui.QPixmap("")
+        self.Background = QtWidgets.QLabel(self.Main)
+        self.Background.setGeometry(QtCore.QRect(0, 0, 600, 500))
+        self.Background.setText("")
+        self.Background.setPixmap(self.bg_1)
+        self.Background.setScaledContents(True)
+        self.Background.setObjectName("Background")
+        self.Background.raise_()
+        self.Author.raise_()
+        self.Version.raise_()
+        self.Title.raise_()
+        self.OpenImage.raise_()
+        self.Exit.raise_()
+        self.label.raise_()
+        self.CleanBackground = QtWidgets.QPushButton(self.Main)
+        self.CleanBackground.setGeometry(QtCore.QRect(520, 480, 80, 20))
+        self.CleanBackground.setStyleSheet(
+            "background-color:rgb(174, 196, 219)")
+        self.CleanBackground.setObjectName("CleanBackground")
+        self.CleanBackground.clicked.connect(self.cleanBackground)
         MainWindow.setCentralWidget(self.centralwidget)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -87,7 +108,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Wait.setVisible(True)
 
     def openPhotoEvent(self):
-        temp = Tools.getPhoto()
+        mode = Tools.getMode(self)
+        path = Tools.getPath(mode, self)
+        if not path:
+            return 0
+        temp = Tools.getPhoto(path)
         if temp:
             self.base64_photo = temp
             del temp
@@ -96,24 +121,39 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             return 0
         self.showWait()
         self.access_token = Tools.getAccessToken(
-            self.client_id, self.client_secret)
+            self.client_id, self.client_secret, self)
         # time.sleep(10)
         if self.access_token == False:
             self.showMain()
             return 0
         self.result = Tools.getDistinguishResult(
-            self.base64_photo, self.access_token)
+            self.base64_photo, self.access_token, self)
         del self.base64_photo, self.access_token
         if self.result == False:
             self.showMain()
             return 0
 
-        self.result = Tools.resultParser(self.result)
+        self.result = Tools.resultParser(self.result, self)
         if self.result == False:
             self.showMain()
             return 0
-        Tools.saveResult(self.result)
+        Tools.saveResult(self.result, mode, self)
         self.showMain()
+
+    def cleanBackground(self):
+        self.CleanBackground.setText(
+            QtCore.QCoreApplication.translate("MainWindow", "恢复背景图片"))
+        self.CleanBackground.clicked.connect(self.resetBackground)
+        self.CleanBackground.setStyleSheet("background-color:rgb(255,255,255)")
+        self.Background.setPixmap(self.bg_2)
+
+    def resetBackground(self):
+        self.CleanBackground.setText(
+            QtCore.QCoreApplication.translate("MainWindow", "清除背景图片"))
+        self.CleanBackground.clicked.connect(self.cleanBackground)
+        self.CleanBackground.setStyleSheet(
+            "background-color:rgb(174, 196, 219)")
+        self.Background.setPixmap(self.bg_1)
 
     def initClient(self):
         self.client_id = "mvWgpUChDGa0ba9XyNgV2k9G"
@@ -123,9 +163,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "口算批改程序"))
         self.Author.setText(_translate("MainWindow", "作者:ChenHaoYan"))
-        self.Version.setText(_translate("MainWindow", "V1.0.0"))
+        self.Version.setText(_translate("MainWindow", "V1.1.0 beta 06"))
         self.Title.setText(_translate("MainWindow", "口算批改程序"))
         self.OpenImage.setText(_translate("MainWindow", "打开图片"))
         self.Exit.setText(_translate("MainWindow", "退出"))
-        self.label.setText(_translate("MainWindow", "请点击打开图片按钮以上传图片。"))
+        self.label.setText(_translate("MainWindow", "请点击开始识别按钮以开始识别。"))
+        self.CleanBackground.setText(_translate("MainWindow", "清除背景图片"))
         self.WaitText.setText(_translate("MainWindow", "正在识别中,请等一下。"))

@@ -6,7 +6,7 @@
         {
             "label": "编译ui文件",
             "type": "shell",
-            "command": "pyuic5 -o ${workspaceFolder}\\src\\MainWindow.py ${workspaceFolder}\\ui\\MainWindow.ui",
+            "command": "pyuic5 -o ${workspaceFolder}\\src\\MainWindow_.py ${workspaceFolder}\\ui\\MainWindow.ui",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -26,7 +26,7 @@
         {
             "label": "打包可执行文件",
             "type": "shell",
-            "command": "pyinstaller ${workspaceFolder}\\src\\Main.py -F -w -p ${workspaceFolder}\\src\\MainWindow.py -p ${workspaceFolder}\\src\\MainWindow_rc.py -p ${workspaceFolder}\\src\\tools.py --distpath ${workspaceFolder}\\dist",
+            "command": "pyinstaller ${workspaceFolder}\\src\\Main.py -F -w -p ${workspaceFolder}\\src\\MainWindow.py -p ${workspaceFolder}\\src\\MainWindow_rc.py -p ${workspaceFolder}\\src\\Tools.py -p ${workspaceFolder}\\src\\ImageData.py --distpath ${workspaceFolder}\\dist",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

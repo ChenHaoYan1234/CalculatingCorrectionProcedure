@@ -2,40 +2,78 @@ import base64
 import csv
 import getpass
 import os
-from sys import argv
-import threading
+import time
 import requests
-import win32api
-import win32con
-import win32ui
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QWidget
+import sqlite3
 
+def getConnect(db_name:str):
+    return sqlite3.connect(db_name)
 
-def getPhoto() -> bytes:
-    dlg = win32ui.CreateFileDialog(1)
-    dlg.SetOFNInitialDir("C:\\Users\\" + getpass.getuser() + "\\Desktop\\")
-    dlg.DoModal()
-    filename: str = dlg.GetPathName()
-    if os.path.isfile(filename):
-        file = open(filename, 'rb')
-        img = base64.b64encode(file.read())
-        file.close()
-        return img
+def getPath(mode: int, window: QMainWindow | QWidget | None = None):
+    if mode == 0:
+        path = QFileDialog.getOpenFileName(
+            window,
+            "请选择文件",
+            "C:\\Users\\" +
+            getpass.getuser() +
+            "\\Desktop\\",
+            "Image File(*.jpg;*.jpge;*.png;*.bmp);;All File(*.*)"
+        )
+        if not os.path.isfile(path[0]):
+            QMessageBox.critical(
+                window,
+                "错误",
+                "请选择一张图片！",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
+            return False
+        else:
+            return path[0]
     else:
-        win32api.MessageBox(0, "请选择一张图片！", "", win32con.MB_OK)
+        pass
 
 
-def getAccessToken(client_id: str, client_secret: str) -> str:
+def getPhoto(path: str) -> bytes:
+    file = open(path, 'rb')
+    img = base64.b64encode(file.read())
+    file.close()
+    return img
+
+
+def getAccessToken(client_id: str, client_secret: str, window: QMainWindow | QWidget | None = None) -> str:
     host = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' + \
         client_id+'&client_secret='+client_secret
-    response = requests.get(host)
-    if response:
+    try:
+        response = requests.get(host)
+    except:
+        msg = QMessageBox.critical(
+            window,
+            "错误",
+            "请求失败!请检查是否连接因特网后重试。",
+            QMessageBox.StandardButton.Retry |
+            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Retry
+        )
+        if msg == QMessageBox.StandardButton.Retry:
+            return getAccessToken(client_id, client_secret, window)
+        else:
+            return False
+    if response and (not ("error_msg" in response.json())):
         access_token = response.json()["access_token"]
         return access_token
     else:
-        retry = win32api.MessageBox(
-            0, "请求失败!请检查是否连接因特网后重试。", "", win32con.MB_RETRYCANCEL)
-        if retry == 4:
-            return getAccessToken()
+        msg = QMessageBox.critical(
+            window,
+            "错误",
+            "请求失败!服务异常,请稍后重试。",
+            QMessageBox.StandardButton.Retry |
+            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Retry
+        )
+        if msg == QMessageBox.StandardButton.Retry:
+            return getAccessToken(client_id, client_secret, window)
         else:
             return False
 
@@ -49,39 +87,61 @@ def hasProp(obj: dict, prop: str):
         return False
 
 
-def getDistinguishResult(base64_photo: bytes, access_token: str) -> dict:
+def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: QMainWindow | QWidget | None = None) -> dict:
     host = "https://aip.baidubce.com/rest/2.0/ocr/v1/doc_analysis"
     params = {"image": base64_photo,
               "language_type": "CHN_ENG", "result_type": "big"}
     host = host + "?access_token=" + access_token
     headers = {'content-type': 'application/x-www-form-urlencoded'}
-    response = requests.post(host, data=params, headers=headers)
-    if response and (not ("error_msg" in response)):
+    try:
+        response = requests.post(host, data=params, headers=headers)
+    except:
+        msg = QMessageBox.critical(
+            window,
+            "错误",
+            "请求失败!请检查是否连接因特网后重试。",
+            QMessageBox.StandardButton.Retry |
+            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Retry
+        )
+        if msg == QMessageBox.StandardButton.Retry:
+            return getDistinguishResult(base64_photo, access_token, window)
+        else:
+            return False
+    if response and (not ("error_msg" in response.json())):
         result = response.json()
         return result
     else:
-        retry = win32api.MessageBox(
-            0, "请求失败!请检查是否连接因特网后重试。", "", win32con.MB_RETRYCANCEL)
-        if retry == 4:
-            return getDistinguishResult()
+        msg = QMessageBox.critical(
+            window,
+            "错误",
+            "请求失败!服务异常,请稍后重试。",
+            QMessageBox.StandardButton.Retry |
+            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Retry
+        )
+        print(response.json())
+        if msg == QMessageBox.StandardButton.Retry:
+            return getDistinguishResult(base64_photo, access_token, window)
         else:
             return False
 
 
-def resultParser(result: dict) -> list:
-    try:
-        result_len = len(result["results"])
-    except:
-        print("无法获取识别结果!")
-        print(result)
-        return False
+def resultParser(result: dict, window: QMainWindow | QWidget | None = None) -> list:
+    result_len = len(result["results"])
 
     result_list = []
     for i in range(result_len):
         temp_text: str = result["results"][i]["words"]["word"]
         temp_text = temp_text.split("=")
         if len(temp_text) != 2:
-            win32api.MessageBox(0, "请确定图片内只有题目!", "", win32con.MB_OK)
+            QMessageBox.critical(
+                window,
+                "错误",
+                "请确定图片内只有题目!",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
             return False
         temp_print: str = temp_text[0]
         temp_handwriting: str = temp_text[1]
@@ -99,20 +159,82 @@ def resultParser(result: dict) -> list:
     return result_list
 
 
-def saveResult(result: list) -> None:
-    dlg = win32ui.CreateFileDialog(0)
-    dlg.SetOFNInitialDir("C:\\Users\\" + getpass.getuser() + "\\Desktop\\")
-    dlg.DoModal()
-    path: str = dlg.GetPathName()
+def getMode(window: QWidget | QMainWindow | None = None) -> int:
+    msg = QMessageBox(QMessageBox.Icon.Question, "请选择口算图片打开方式", "请选择口算图片打开方式")
+    file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
+    dir_btn = msg.addButton(window.tr("打开文件夹"), QMessageBox.ButtonRole.NoRole)
+    msg.exec_()
+    if msg.clickedButton() == file_btn:
+        return 0
+    else:
+        return 1
+
+
+def saveResult(result: list, mode: int, window: QWidget | QMainWindow | None = None, file_list: list = None) -> None:
+    if mode == 0:
+        path: str = QFileDialog.getSaveFileName(
+            window,
+            "请选择保存路径",
+            "C:\\Users\\" +
+            getpass.getuser() +
+            "\\Desktop\\" +
+            time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
+            ".csv",
+            "CSV File(*.csv);;All File(*.*)"
+        )
+    elif mode == 1:
+        path: str = QFileDialog.getExistingDirectory(
+            window,
+            "请选择保存文件夹"
+            "C:\\Users\\" +
+            getpass.getuser() +
+            "\\Desktop\\"
+        )
+    else:
+        raise ValueError("Unknow Mode!")
     try:
-        result_file = open(path, "w", encoding="utf-8")
-        writer = csv.writer(result_file)
-        writer.writerow(["题目", "学生答案", "正确答案", "对错"])
-        for one in result:
-            writer.writerow(one)
-        result_file.close()
-        win32api.MessageBox(0, "已保存至"+path, "结果保存成功!", win32con.MB_OK)
+        if os.path.isfile(path[0]):
+            result_file = open(path[0], "w", encoding="utf-8")
+            writer = csv.writer(result_file)
+            writer.writerow(["题目", "学生答案", "正确答案", "对错"])
+            for one in result:
+                writer.writerow(one)
+            result_file.close()
+            QMessageBox.information(
+                window,
+                "保存成功",
+                "已保存至" +
+                path[0],
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
+        else:
+            msg = QMessageBox.critical(
+                window,
+                "错误",
+                "保存失败！请确定您选择了一个正确的路径！",
+                QMessageBox.StandardButton.Retry |
+                QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Retry
+            )
+            if msg == QMessageBox.StandardButton.Retry:
+                
+                saveResult(result,mode,window,file_list)
+            else:
+                pass
     except PermissionError:
-        win32api.MessageBox(0, "权限不足!", "", win32con.MB_OK)
-    except:
-        pass
+        QMessageBox.critical(
+            window,
+            "错误",
+            "权限不足！",
+            QMessageBox.StandardButton.Ok,
+            QMessageBox.StandardButton.Ok
+        )
+    except Exception as e:
+        QMessageBox.critical(
+            window,
+            "错误",
+            "未知错误！\n错误信息"+str(e.args),
+            QMessageBox.StandardButton.Ok,
+            QMessageBox.StandardButton.Ok
+        )

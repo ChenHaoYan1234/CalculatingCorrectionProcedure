@@ -76,7 +76,7 @@
     <widget class="QPushButton" name="OpenImage">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>150</x>
        <y>350</y>
        <width>100</width>
        <height>40</height>
@@ -92,7 +92,7 @@
     <widget class="QPushButton" name="Exit">
      <property name="geometry">
       <rect>
-       <x>490</x>
+       <x>350</x>
        <y>350</y>
        <width>100</width>
        <height>40</height>
@@ -103,6 +103,9 @@
      </property>
      <property name="text">
       <string>退出</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -123,6 +126,49 @@
       <string>请点击打开图片按钮以上传图片。</string>
      </property>
     </widget>
+    <widget class="QLabel" name="Background">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>600</width>
+       <height>500</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="MainWindow.qrc">:/Image/background.jpg</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="CleanBackground">
+     <property name="geometry">
+      <rect>
+       <x>525</x>
+       <y>480</y>
+       <width>75</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">backgound-color:rgb(174, 196, 219)</string>
+     </property>
+     <property name="text">
+      <string>清除背景图片</string>
+     </property>
+    </widget>
+    <zorder>Background</zorder>
+    <zorder>Author</zorder>
+    <zorder>Version</zorder>
+    <zorder>Title</zorder>
+    <zorder>OpenImage</zorder>
+    <zorder>Exit</zorder>
+    <zorder>label</zorder>
+    <zorder>CleanBackground</zorder>
    </widget>
    <widget class="QFrame" name="Wait">
     <property name="geometry">
@@ -170,7 +216,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="MainWindow.qrc">:/WaitIcon/loading.gif</pixmap>
+      <pixmap>:/WaitIcon/loading.gif</pixmap>
      </property>
     </widget>
    </widget>
