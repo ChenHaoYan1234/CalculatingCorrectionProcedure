@@ -30,7 +30,19 @@ def getPath(mode: int, window: QMainWindow | QWidget | None = None):
         else:
             return path[0]
     else:
-        pass
+        path = QFileDialog.getExistingDirectory(
+            window, "打开文件夹", "C:\\Users\\"+getpass.getuser()+"\\Desktop\\")
+        if not os.path.isdir(path):
+            QMessageBox.critical(
+                window,
+                "错误",
+                "请选择一个文件夹！",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
+            return False
+        else:
+            return path
 
 
 def getPhoto(path: str) -> bytes:
@@ -38,6 +50,26 @@ def getPhoto(path: str) -> bytes:
     img = base64.b64encode(file.read())
     file.close()
     return img
+
+
+def getPhotoFromPath(path: str, window: QMainWindow | QWidget | None = None) -> list:
+    img_name_list = []
+    img_base64_list = []
+    if os.path.isdir(path):
+        for file in os.listdir(path):
+            if file.split(".")[-1] in ["jpg", "jpge", "png", "bmp"]:
+                img_name_list.append(file)
+                img_base64_list.append(getPhoto(path+"\\"+file))
+        if len(img_name_list) == 0:
+            QMessageBox.critical(window, "错误", "请选择一个有图片的文件夹！",
+                                 QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+            return False
+        else:
+            return [img_name_list, img_base64_list]
+    else:
+        QMessageBox.critical(window, "错误", "请选择一个文件夹！",
+                             QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+        return False
 
 
 def getAccessToken(client_id: str, client_secret: str, window: QMainWindow | QWidget | None = None) -> str:
@@ -105,12 +137,12 @@ def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: 
             QMessageBox.StandardButton.Retry
         )
         if msg == QMessageBox.StandardButton.Retry:
-            return getDistinguishResult(base64_photo, access_token, window,db)
+            return getDistinguishResult(base64_photo, access_token, window, db)
         else:
             return False
     if response and (not ("error_msg" in response.json())):
         result = response.json()
-        db.newResult(base64_photo,result)
+        db.newResult(base64_photo, result)
         return result
     else:
         msg = QMessageBox.critical(
@@ -123,7 +155,7 @@ def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: 
         )
         print(response.json())
         if msg == QMessageBox.StandardButton.Retry:
-            return getDistinguishResult(base64_photo, access_token, window,db)
+            return getDistinguishResult(base64_photo, access_token, window, db)
         else:
             return False
 
@@ -164,6 +196,8 @@ def getMode(window: QWidget | QMainWindow | None = None) -> int:
     msg = QMessageBox(QMessageBox.Icon.Question, "请选择口算图片打开方式", "请选择口算图片打开方式")
     file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
     dir_btn = msg.addButton(window.tr("打开文件夹"), QMessageBox.ButtonRole.NoRole)
+    msg.setDefaultButton(file_btn)
+    msg.setEscapeButton(file_btn)
     msg.exec_()
     if msg.clickedButton() == file_btn:
         return 0

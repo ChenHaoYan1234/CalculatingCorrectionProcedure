@@ -18,6 +18,8 @@ import ImageData
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
+    _VERSION = "1.1.0 beta 12"
+
     def setupUi(self, MainWindow: QtWidgets.QMainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(600, 500)
@@ -117,37 +119,42 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Wait.setVisible(True)
 
     def openPhotoEvent(self):
+        self.showWait()
         mode = Tools.getMode(self)
         path = Tools.getPath(mode, self)
         if not path:
+            self.showMain()
             return 0
-        temp = Tools.getPhoto(path)
-        if temp:
-            self.base64_photo = temp
-            del temp
+        if mode == 0:
+            temp = Tools.getPhoto(path)
+            if temp:
+                self.base64_photo = temp
+                del temp
+            else:
+                del temp
+                self.showMain()
+                return 0
+            self.access_token = Tools.getAccessToken(
+                self.client_id, self.client_secret, self)
+            # time.sleep(10)
+            if self.access_token == False:
+                self.showMain()
+                return 0
+            self.result = Tools.getDistinguishResult(
+                self.base64_photo, self.access_token, self, self.db)
+            del self.base64_photo, self.access_token
+            if self.result == False:
+                self.showMain()
+                return 0 
+            self.result = Tools.resultParser(self.result, self)
+            if self.result == False:
+                self.showMain()
+                return 0
+            Tools.saveResult(self.result, mode, self)
+            self.showMain()
         else:
-            del temp
-            return 0
-        self.showWait()
-        self.access_token = Tools.getAccessToken(
-            self.client_id, self.client_secret, self)
-        # time.sleep(10)
-        if self.access_token == False:
+            path = Tools.getPhotoFromPath(path,self)
             self.showMain()
-            return 0
-        self.result = Tools.getDistinguishResult(
-            self.base64_photo, self.access_token, self,self.db)
-        del self.base64_photo, self.access_token
-        if self.result == False:
-            self.showMain()
-            return 0
-
-        self.result = Tools.resultParser(self.result, self)
-        if self.result == False:
-            self.showMain()
-            return 0
-        Tools.saveResult(self.result, mode, self)
-        self.showMain()
 
     def cleanBackground(self):
         self.CleanBackground.setText(
@@ -172,7 +179,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "口算批改程序"))
         self.Author.setText(_translate("MainWindow", "作者:ChenHaoYan"))
-        self.Version.setText(_translate("MainWindow", "V1.1.0 beta 06"))
+        self.Version.setText(_translate("MainWindow", self._VERSION))
         self.Title.setText(_translate("MainWindow", "口算批改程序"))
         self.OpenImage.setText(_translate("MainWindow", "打开图片"))
         self.Exit.setText(_translate("MainWindow", "退出"))
