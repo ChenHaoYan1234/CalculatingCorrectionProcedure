@@ -26,7 +26,7 @@
         {
             "label": "打包可执行文件",
             "type": "shell",
-            "command": "pyinstaller ${workspaceFolder}\\src\\Main.py -F -w -p ${workspaceFolder}\\src\\MainWindow.py -p ${workspaceFolder}\\src\\MainWindow_rc.py -p ${workspaceFolder}\\src\\Tools.py -p ${workspaceFolder}\\src\\ImageData.py --distpath ${workspaceFolder}\\dist",
+            "command": "${workspaceFolder}\\build.bat",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

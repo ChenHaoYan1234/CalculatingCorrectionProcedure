@@ -18,7 +18,7 @@ import ImageData
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
-    _VERSION = "1.1.0 beta 12"
+    _VERSION = "1.2.0"
 
     def setupUi(self, MainWindow: QtWidgets.QMainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -77,7 +77,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.WaitIcon.setMovie(self.WaitGif)
         self.WaitGif.start()
         self.WaitIcon.setObjectName("WaitIcon")
-        self.bg_1 = QtGui.QPixmap(":/Image/background.jpg")
+        self.bg_1 = QtGui.QPixmap(os.path.dirname(os.path.realpath(sys.argv[0]))+"\\bg\\bg2.png")
         self.bg_2 = QtGui.QPixmap("")
         self.Background = QtWidgets.QLabel(self.Main)
         self.Background.setGeometry(QtCore.QRect(0, 0, 600, 500))
@@ -95,9 +95,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.CleanBackground = QtWidgets.QPushButton(self.Main)
         self.CleanBackground.setGeometry(QtCore.QRect(520, 480, 80, 20))
         self.CleanBackground.setStyleSheet(
-            "background-color:rgb(174, 196, 219)")
+            "background-color:rgb(255,255,255)")
         self.CleanBackground.setObjectName("CleanBackground")
         self.CleanBackground.clicked.connect(self.cleanBackground)
+        self.SetBackground = QtWidgets.QPushButton(self.Main)
+        self.SetBackground.setGeometry(QtCore.QRect(520, 460, 80, 20))
+        self.SetBackground.setStyleSheet(
+            "background-color:rgb(255,255,255)")
+        self.SetBackground.setObjectName("CleanBackground")
+        self.SetBackground.clicked.connect(self.importBackground)
         MainWindow.setCentralWidget(self.centralwidget)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -145,15 +151,38 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             del self.base64_photo, self.access_token
             if self.result == False:
                 self.showMain()
-                return 0 
+                return 0
             self.result = Tools.resultParser(self.result, self)
             if self.result == False:
                 self.showMain()
                 return 0
-            Tools.saveResult(self.result, mode, self)
+            Tools.saveResult(self.result, mode, self,path)
             self.showMain()
         else:
-            path = Tools.getPhotoFromPath(path,self)
+            img_  = Tools.getPhotoFromPath(path, self)
+            if img_ == False:
+                self.showMain()
+                return 0
+            else:
+                path_list,img_list = img_
+            self.access_token = Tools.getAccessToken(
+                self.client_id, self.client_secret, self)
+            if self.access_token == False:
+                self.showMain()
+                return 0
+            self.results = []
+            for i in img_list:
+                self.results.append(Tools.getDistinguishResult(
+                    i, self.access_token, self, self.db))
+            del self.access_token, img_list
+            if False in self.results:
+                self.showMain()
+                return 0
+            self.results = Tools.resultsParser(self.results, self)
+            if False in self.results:
+                self.showMain()
+                return 0
+            Tools.saveResult(self.results, mode, self, path_list)
             self.showMain()
 
     def cleanBackground(self):
@@ -168,12 +197,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             QtCore.QCoreApplication.translate("MainWindow", "清除背景图片"))
         self.CleanBackground.clicked.connect(self.cleanBackground)
         self.CleanBackground.setStyleSheet(
-            "background-color:rgb(174, 196, 219)")
+            "background-color:rgb(255, 255, 255)")
         self.Background.setPixmap(self.bg_1)
 
+    def importBackground(self):
+        path = Tools.getPath(2,self)
+        if not path:
+            return 0
+        self.resetBackground()
+        self.bg_1 = QtGui.QPixmap(path)
+        self.Background.setPixmap(self.bg_1)
+
+        
+
     def initClient(self):
-        self.client_id = "mvWgpUChDGa0ba9XyNgV2k9G"
-        self.client_secret = "xyHmCRUO6lCtOQBjMaWsq6KCFgkCK6CZ"
+        self.client_id = "MrM4zO5cStpSxD3TBi5qPzZt"
+        self.client_secret = "cFEAj5yCrxxck22fqAitegNYFDOnVCtV"
 
     def retranslateUi(self, MainWindow: QtWidgets.QMainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -185,4 +224,5 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Exit.setText(_translate("MainWindow", "退出"))
         self.label.setText(_translate("MainWindow", "请点击开始识别按钮以开始识别。"))
         self.CleanBackground.setText(_translate("MainWindow", "清除背景图片"))
+        self.SetBackground.setText(_translate("MainWindow","选择背景图片"))
         self.WaitText.setText(_translate("MainWindow", "正在识别中,请等一下。"))

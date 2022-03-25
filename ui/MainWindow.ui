@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>500</height>
+    <height>522</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -145,22 +148,6 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="CleanBackground">
-     <property name="geometry">
-      <rect>
-       <x>525</x>
-       <y>480</y>
-       <width>75</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">backgound-color:rgb(174, 196, 219)</string>
-     </property>
-     <property name="text">
-      <string>清除背景图片</string>
-     </property>
-    </widget>
     <zorder>Background</zorder>
     <zorder>Author</zorder>
     <zorder>Version</zorder>
@@ -168,7 +155,6 @@
     <zorder>OpenImage</zorder>
     <zorder>Exit</zorder>
     <zorder>label</zorder>
-    <zorder>CleanBackground</zorder>
    </widget>
    <widget class="QFrame" name="Wait">
     <property name="geometry">
@@ -221,6 +207,40 @@
     </widget>
    </widget>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>设置</string>
+    </property>
+    <addaction name="SetBackground"/>
+    <addaction name="CleanBackground"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="SetBackground">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>导入背景图</string>
+   </property>
+  </action>
+  <action name="CleanBackground">
+   <property name="text">
+    <string>清除背景图</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="MainWindow.qrc"/>

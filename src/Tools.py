@@ -2,20 +2,19 @@ import base64
 import csv
 import getpass
 import os
+import sys
 import time
 import requests
 import ImageData
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QWidget
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 
-def getPath(mode: int, window: QMainWindow | QWidget | None = None):
+def getPath(mode: int, window) -> str:
     if mode == 0:
         path = QFileDialog.getOpenFileName(
             window,
             "请选择文件",
-            "C:\\Users\\" +
-            getpass.getuser() +
-            "\\Desktop\\",
+            os.path.dirname(os.path.realpath(sys.argv[0])),
             "Image File(*.jpg;*.jpge;*.png;*.bmp);;All File(*.*)"
         )
         if not os.path.isfile(path[0]):
@@ -29,9 +28,9 @@ def getPath(mode: int, window: QMainWindow | QWidget | None = None):
             return False
         else:
             return path[0]
-    else:
+    elif mode == 1:
         path = QFileDialog.getExistingDirectory(
-            window, "打开文件夹", "C:\\Users\\"+getpass.getuser()+"\\Desktop\\")
+            window, "打开文件夹", os.path.dirname(os.path.realpath(sys.argv[0])))
         if not os.path.isdir(path):
             QMessageBox.critical(
                 window,
@@ -43,6 +42,25 @@ def getPath(mode: int, window: QMainWindow | QWidget | None = None):
             return False
         else:
             return path
+    else:
+        path = QFileDialog.getOpenFileName(
+            window,
+            "请选择文件",
+            os.path.dirname(os.path.realpath(sys.argv[0])) +
+            "\\bg\\",
+            "Image File(*.jpg;*.jpge;*.png;*.bmp);;All File(*.*)"
+        )
+        if not os.path.isfile(path[0]):
+            QMessageBox.critical(
+                window,
+                "错误",
+                "请选择一张图片！",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
+            return False
+        else:
+            return path[0]
 
 
 def getPhoto(path: str) -> bytes:
@@ -52,7 +70,7 @@ def getPhoto(path: str) -> bytes:
     return img
 
 
-def getPhotoFromPath(path: str, window: QMainWindow | QWidget | None = None) -> list:
+def getPhotoFromPath(path: str, window) -> list:
     img_name_list = []
     img_base64_list = []
     if os.path.isdir(path):
@@ -69,10 +87,10 @@ def getPhotoFromPath(path: str, window: QMainWindow | QWidget | None = None) -> 
     else:
         QMessageBox.critical(window, "错误", "请选择一个文件夹！",
                              QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-        return False
+        return [False,False]
 
 
-def getAccessToken(client_id: str, client_secret: str, window: QMainWindow | QWidget | None = None) -> str:
+def getAccessToken(client_id: str, client_secret: str, window) -> str:
     host = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' + \
         client_id+'&client_secret='+client_secret
     try:
@@ -117,7 +135,7 @@ def hasProp(obj: dict, prop: str):
         return False
 
 
-def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: QMainWindow | QWidget | None = None, db: ImageData.ImageData = None) -> dict:
+def getDistinguishResult(base64_photo: bytes, access_token: str, window, db: ImageData.ImageData) -> dict:
     if db.getResultFromImage(base64_photo) != None:
         return db.getResultFromImage(base64_photo)
     host = "https://aip.baidubce.com/rest/2.0/ocr/v1/doc_analysis"
@@ -160,7 +178,7 @@ def getDistinguishResult(base64_photo: bytes | list, access_token: str, window: 
             return False
 
 
-def resultParser(result: dict, window: QMainWindow | QWidget | None = None) -> list:
+def resultParser(result: dict, window) -> list:
     result_len = len(result["results"])
 
     result_list = []
@@ -180,9 +198,9 @@ def resultParser(result: dict, window: QMainWindow | QWidget | None = None) -> l
         temp_handwriting: str = temp_text[1]
         temp_handwriting = float(eval(temp_handwriting.replace("/", "1")))
         temp_1 = temp_print
-        temp_1.replace("×", "*")
-        temp_1.replace("x", "*")
-        temp_1.replace("÷", "/")
+        temp_1 = temp_1.replace("×", "*")
+        temp_1 = temp_1.replace("x", "*")
+        temp_1 = temp_1.replace("÷", "/")
         temp_answer = float(eval(temp_1))
         temp_right = "✓" if (float(temp_handwriting) == temp_answer) else "✗"
         temp_print.replace("*", "×")
@@ -192,7 +210,14 @@ def resultParser(result: dict, window: QMainWindow | QWidget | None = None) -> l
     return result_list
 
 
-def getMode(window: QWidget | QMainWindow | None = None) -> int:
+def resultsParser(results: list, window=None) -> list:
+    results_ = []
+    for i in results:
+        results_.append(resultParser(i, window))
+    return results_
+
+
+def getMode(window) -> 0 | 1:
     msg = QMessageBox(QMessageBox.Icon.Question, "请选择口算图片打开方式", "请选择口算图片打开方式")
     file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
     dir_btn = msg.addButton(window.tr("打开文件夹"), QMessageBox.ButtonRole.NoRole)
@@ -205,31 +230,39 @@ def getMode(window: QWidget | QMainWindow | None = None) -> int:
         return 1
 
 
-def saveResult(result: list, mode: int, window: QWidget | QMainWindow | None = None, file_list: list = None) -> None:
+def saveResult(result: list, mode: int, window, name: list|str = None) -> None:
     if mode == 0:
-        path: str = QFileDialog.getSaveFileName(
+        path = QFileDialog.getSaveFileName(
             window,
             "请选择保存路径",
-            "C:\\Users\\" +
-            getpass.getuser() +
-            "\\Desktop\\" +
+            os.path.dirname(os.path.realpath(sys.argv[0])) +
+            "\\" +
+            name.split(".")[0]+
+            "-"+
             time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
             ".csv",
             "CSV File(*.csv);;All File(*.*)"
         )
+        path = path[0]
     elif mode == 1:
         path: str = QFileDialog.getExistingDirectory(
             window,
-            "请选择保存文件夹"
-            "C:\\Users\\" +
-            getpass.getuser() +
-            "\\Desktop\\"
+            "请选择保存文件夹",
+            os.path.dirname(os.path.realpath(sys.argv[0]))
         )
     else:
         raise ValueError("Unknow Mode!")
-    try:
-        if os.path.isfile(path[0]):
-            result_file = open(path[0], "w", encoding="utf-8")
+    if path.replace(" ","") == "":
+        QMessageBox.critical(window,
+            "错误",
+            "请确认你选择了一个正确的路径!",
+            QMessageBox.StandardButton.Ok,
+            QMessageBox.StandardButton.Ok
+        )
+        return 0
+    if mode == 0:
+        try:
+            result_file = open(path, "w", encoding="utf-8")
             writer = csv.writer(result_file)
             writer.writerow(["题目", "学生答案", "正确答案", "对错"])
             for one in result:
@@ -243,33 +276,60 @@ def saveResult(result: list, mode: int, window: QWidget | QMainWindow | None = N
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
-        else:
-            msg = QMessageBox.critical(
+        except PermissionError:
+            QMessageBox.critical(
                 window,
                 "错误",
-                "保存失败！请确定您选择了一个正确的路径！",
-                QMessageBox.StandardButton.Retry |
-                QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Retry
+                "权限不足！",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
             )
-            if msg == QMessageBox.StandardButton.Retry:
+            return 0
+        except Exception as e:
+            QMessageBox.critical(
+                window,
+                "错误",
+                "未知错误！\n错误信息"+str(e.args),
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.Ok
+            )
+            return 0
+    else:
+        for i in range(0, len(result)):
+            try:
+                name: str = name[i]
+                name = name.replace("jpge", "csv")
+                name = name.replace("jpg", "csv")
+                name = name.replace("bmp", "csv")
+                name = name.replace("png", "csv")
+                result_file = open(path+"\\"+name, "w", encoding="utf-8")
+                writer = csv.writer(result_file)
+                writer.writerow(["题目", "学生答案", "正确答案", "对错"])
+                for one in result[i]:
+                    writer.writerow(one)
+                result_file.close()
 
-                saveResult(result, mode, window, file_list)
-            else:
-                pass
-    except PermissionError:
-        QMessageBox.critical(
+            except PermissionError:
+                QMessageBox.critical(
+                    window,
+                    "错误",
+                    "权限不足！",
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.Ok
+                )
+            except Exception as e:
+                QMessageBox.critical(
+                    window,
+                    "错误",
+                    "未知错误！\n错误信息"+str(e.args),
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.Ok
+                )
+        QMessageBox.information(
             window,
-            "错误",
-            "权限不足！",
-            QMessageBox.StandardButton.Ok,
-            QMessageBox.StandardButton.Ok
-        )
-    except Exception as e:
-        QMessageBox.critical(
-            window,
-            "错误",
-            "未知错误！\n错误信息"+str(e.args),
+            "保存成功",
+            "已保存至" +
+            path,
             QMessageBox.StandardButton.Ok,
             QMessageBox.StandardButton.Ok
         )
