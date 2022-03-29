@@ -179,35 +179,44 @@ def getDistinguishResult(base64_photo: bytes, access_token: str, window, db: Ima
 
 
 def resultParser(result: dict, window) -> list:
-    result_len = len(result["results"])
+    try:
+        result_len = len(result["results"])
 
-    result_list = []
-    for i in range(result_len):
-        temp_text: str = result["results"][i]["words"]["word"]
-        temp_text = temp_text.split("=")
-        if len(temp_text) != 2:
-            QMessageBox.critical(
-                window,
-                "错误",
-                "请确定图片内只有题目!",
-                QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Ok
-            )
-            return False
-        temp_print: str = temp_text[0]
-        temp_handwriting: str = temp_text[1]
-        temp_handwriting = float(eval(temp_handwriting.replace("/", "1")))
-        temp_1 = temp_print
-        temp_1 = temp_1.replace("×", "*")
-        temp_1 = temp_1.replace("x", "*")
-        temp_1 = temp_1.replace("÷", "/")
-        temp_answer = float(eval(temp_1))
-        temp_right = "✓" if (float(temp_handwriting) == temp_answer) else "✗"
-        temp_print.replace("*", "×")
-        temp_print.replace("/", "÷")
-        temp_result = [temp_print, temp_handwriting, temp_answer, temp_right]
-        result_list.append(temp_result)
-    return result_list
+        result_list = []
+        for i in range(result_len):
+            temp_text: str = result["results"][i]["words"]["word"]
+            temp_text = temp_text.split("=")
+            if len(temp_text) != 2:
+                QMessageBox.critical(
+                    window,
+                    "错误",
+                    "请确定图片内只有题目!",
+                    QMessageBox.StandardButton.Ok,
+                    QMessageBox.StandardButton.Ok
+                )
+                return False
+            temp_print: str = temp_text[0]
+            temp_handwriting: str = temp_text[1]
+            temp_handwriting = float(eval(temp_handwriting.replace("/", "1")))
+            temp_1 = temp_print
+            temp_1 = temp_1.replace("×", "*")
+            temp_1 = temp_1.replace("x", "*")
+            temp_1 = temp_1.replace("÷", "/")
+            temp_answer = float(eval(temp_1))
+            temp_right = "✓" if (float(temp_handwriting) == temp_answer) else "✗"
+            temp_print = temp_print.replace("*", "×")
+            temp_print = temp_print.replace("/", "÷")
+            temp_result = [temp_print, temp_handwriting, temp_answer, temp_right]
+            result_list.append(temp_result)
+        return result_list
+    except:
+        QMessageBox(
+            window,
+            "错误",
+            "书写不规范！",
+            QMessageBox.StandardButton.Ok,
+            QMessageBox.StandardButton.Ok
+        )
 
 
 def resultsParser(results: list, window=None) -> list:
@@ -230,14 +239,14 @@ def getMode(window) -> 0 | 1:
         return 1
 
 
-def saveResult(result: list, mode: int, window, name: list|str = None) -> None:
+def saveResult(result: list, mode: int, window, file_or_dir_name = None) -> None:
     if mode == 0:
         path = QFileDialog.getSaveFileName(
             window,
             "请选择保存路径",
             os.path.dirname(os.path.realpath(sys.argv[0])) +
             "\\" +
-            name.split(".")[0]+
+            file_or_dir_name.split(".")[0]+
             "-"+
             time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
             ".csv",
@@ -297,7 +306,7 @@ def saveResult(result: list, mode: int, window, name: list|str = None) -> None:
     else:
         for i in range(0, len(result)):
             try:
-                name: str = name[i]
+                name: str = file_or_dir_name[i]
                 name = name.replace("jpge", "csv")
                 name = name.replace("jpg", "csv")
                 name = name.replace("bmp", "csv")
