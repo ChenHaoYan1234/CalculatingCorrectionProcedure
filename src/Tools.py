@@ -87,7 +87,7 @@ def getPhotoFromPath(path: str, window) -> list:
     else:
         QMessageBox.critical(window, "错误", "请选择一个文件夹！",
                              QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-        return [False,False]
+        return [False, False]
 
 
 def getAccessToken(client_id: str, client_secret: str, window) -> str:
@@ -181,7 +181,6 @@ def getDistinguishResult(base64_photo: bytes, access_token: str, window, db: Ima
 def resultParser(result: dict, window) -> list:
     try:
         result_len = len(result["results"])
-
         result_list = []
         for i in range(result_len):
             temp_text: str = result["results"][i]["words"]["word"]
@@ -203,26 +202,32 @@ def resultParser(result: dict, window) -> list:
             temp_1 = temp_1.replace("x", "*")
             temp_1 = temp_1.replace("÷", "/")
             temp_answer = float(eval(temp_1))
-            temp_right = "✓" if (float(temp_handwriting) == temp_answer) else "✗"
+            temp_right = "✓" if (float(temp_handwriting)
+                                 == temp_answer) else "✗"
             temp_print = temp_print.replace("*", "×")
             temp_print = temp_print.replace("/", "÷")
-            temp_result = [temp_print, temp_handwriting, temp_answer, temp_right]
+            temp_result = [temp_print, temp_handwriting,
+                           temp_answer, temp_right]
             result_list.append(temp_result)
         return result_list
     except:
-        QMessageBox(
+        QMessageBox.critical(
             window,
             "错误",
             "书写不规范！",
             QMessageBox.StandardButton.Ok,
             QMessageBox.StandardButton.Ok
         )
+        return False
 
 
 def resultsParser(results: list, window=None) -> list:
     results_ = []
     for i in results:
+
         results_.append(resultParser(i, window))
+        if False in results_:
+            return [False, ]
     return results_
 
 
@@ -239,15 +244,15 @@ def getMode(window) -> 0 | 1:
         return 1
 
 
-def saveResult(result: list, mode: int, window, file_or_dir_name = None) -> None:
+def saveResult(result: list, mode: int, window, file_or_dir_name=None) -> None:
     if mode == 0:
         path = QFileDialog.getSaveFileName(
             window,
             "请选择保存路径",
             os.path.dirname(os.path.realpath(sys.argv[0])) +
             "\\" +
-            file_or_dir_name.split(".")[0]+
-            "-"+
+            file_or_dir_name.split(".")[0] +
+            "-" +
             time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
             ".csv",
             "CSV File(*.csv);;All File(*.*)"
@@ -261,13 +266,13 @@ def saveResult(result: list, mode: int, window, file_or_dir_name = None) -> None
         )
     else:
         raise ValueError("Unknow Mode!")
-    if path.replace(" ","") == "":
+    if path.replace(" ", "") == "":
         QMessageBox.critical(window,
-            "错误",
-            "请确认你选择了一个正确的路径!",
-            QMessageBox.StandardButton.Ok,
-            QMessageBox.StandardButton.Ok
-        )
+                             "错误",
+                             "请确认你选择了一个正确的路径!",
+                             QMessageBox.StandardButton.Ok,
+                             QMessageBox.StandardButton.Ok
+                             )
         return 0
     if mode == 0:
         try:
@@ -281,7 +286,7 @@ def saveResult(result: list, mode: int, window, file_or_dir_name = None) -> None
                 window,
                 "保存成功",
                 "已保存至" +
-                path[0],
+                path,
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
