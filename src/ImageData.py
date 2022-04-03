@@ -12,7 +12,7 @@ class ImageData():
         self.cursor.execute(
             "SELECT name FROM sqlite_master where type='table' order by name")
         table = self.cursor.fetchall()
-        table=[line[0] for line in table]
+        table = [line[0] for line in table]
         if not ("IMAGE" in table):
             self.cursor.execute(
                 '''
@@ -36,7 +36,7 @@ class ImageData():
     def newResult(self, img: bytes, result: dict) -> None:
         result_ = json.dumps(result)
         self.cursor.execute(
-            "INSERT INTO IMAGE (IMAGE,RESULT) VALUES (?, '"+result_+"')",(img,))
+            "INSERT INTO IMAGE (IMAGE,RESULT) VALUES (?, '"+result_+"')", (img,))
         self.connect.commit()
 
     def close(self) -> None:
