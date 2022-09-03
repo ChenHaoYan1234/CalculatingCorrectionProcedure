@@ -1,18 +1,21 @@
+# -*- coding: utf-8 -*-
 import sys
 import MainWindow
+import Values
 from PyQt5.QtWidgets import QApplication
 
 
-class UI_MainWindow(MainWindow.Ui_MainWindow):
-    def __init__(self, parent=None):
-        super(UI_MainWindow, self).__init__(parent=parent)
-        self.setupUi(self)
-
-
 def main():
+    try:
+        if sys.argv[1] == "first_run":
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox(None, "", "已更新至"+Values.version+"。",
+                        QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+    except:
+        pass
     Application = QApplication(sys.argv)
-    MainUI = UI_MainWindow()
-    MainUI.show()
+    Window = MainWindow.Ui_MainWindow()
+    Window.show()
     sys.exit(Application.exec_())
 
 

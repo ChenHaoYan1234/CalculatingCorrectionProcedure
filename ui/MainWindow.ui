@@ -242,8 +242,5 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="MainWindow.qrc"/>
- </resources>
  <connections/>
 </ui>

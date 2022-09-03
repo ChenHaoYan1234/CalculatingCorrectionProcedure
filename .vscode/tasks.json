@@ -6,17 +6,7 @@
         {
             "label": "编译ui文件",
             "type": "shell",
-            "command": "pyuic5 -o ${workspaceFolder}\\src\\MainWindow_.py ${workspaceFolder}\\ui\\MainWindow.ui",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "编译资源文件",
-            "type": "shell",
-            "command": "pyrcc5 -o ${workspaceFolder}\\src\\MainWindow_rc.py ${workspaceFolder}\\ui\\MainWindow.qrc",
+            "command": "pyuic5 -o ${workspaceFolder}\\src\\MainWindow_.py ${workspaceFolder}\\ui\\MainWindow.ui & pyuic5 -o ${workspaceFolder}\\src\\SettingMenu_.py ${workspaceFolder}\\ui\\SettingMenu.ui",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

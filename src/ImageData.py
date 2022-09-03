@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 import sqlite3
 import json
-
 
 class ImageData():
     def __init__(self, db_path: str) -> None:

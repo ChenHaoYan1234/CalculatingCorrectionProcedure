@@ -11,20 +11,21 @@ import os
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import MainWindow_rc
-#import time
+import Values
 import Tools
 import ImageData
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
-    _VERSION = "1.2.0"
+    def __init__(self):
+        super(Ui_MainWindow, self).__init__()
+        self.setupUi()
 
-    def setupUi(self, MainWindow: QtWidgets.QMainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(600, 500)
+    def setupUi(self):
+        self.setObjectName("MainWindow")
+        self.resize(600, 500)
         self.setFixedSize(self.width(), self.height())
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.Main = QtWidgets.QFrame(self.centralwidget)
         self.Main.setGeometry(QtCore.QRect(0, 0, 600, 500))
@@ -73,16 +74,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.WaitIcon = QtWidgets.QLabel(self.Wait)
         self.WaitIcon.setGeometry(QtCore.QRect(100, 150, 200, 200))
         self.WaitIcon.setText("")
-        self.WaitGif = QtGui.QMovie(":/Image/loading.gif")
+        self.WaitGif = QtGui.QMovie("./resource/loading.git")
         self.WaitIcon.setMovie(self.WaitGif)
         self.WaitGif.start()
         self.WaitIcon.setObjectName("WaitIcon")
-        self.bg_1 = QtGui.QPixmap(os.path.dirname(os.path.realpath(sys.argv[0]))+"\\bg\\bg2.png")
-        self.bg_2 = QtGui.QPixmap("")
+        self.bg = QtGui.QPixmap(os.path.dirname(
+            os.path.realpath(sys.argv[0]))+"\\bg\\bg2.png")
         self.Background = QtWidgets.QLabel(self.Main)
         self.Background.setGeometry(QtCore.QRect(0, 0, 600, 500))
         self.Background.setText("")
-        self.Background.setPixmap(self.bg_1)
+        self.Background.setPixmap(self.bg)
         self.Background.setScaledContents(True)
         self.Background.setObjectName("Background")
         self.Background.raise_()
@@ -104,17 +105,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             "background-color:rgb(255,255,255)")
         self.SetBackground.setObjectName("CleanBackground")
         self.SetBackground.clicked.connect(self.importBackground)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        self.initClient()
+        self.setCentralWidget(self.centralwidget)
+        self.retranslateUi(self)
+        QtCore.QMetaObject.connectSlotsByName(self)
         self.showMain()
         self.db = ImageData.ImageData(
             os.path.dirname(os.path.realpath(sys.argv[0]))+"\\image.db")
+        Tools.found_upgrade()
 
-    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.db.close()
-        a0.accept()
+        event.accept()
 
     def showMain(self):
         self.Main.setVisible(True)
@@ -128,61 +129,51 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.showWait()
         mode = Tools.getMode(self)
         path = Tools.getPath(mode, self)
+        access_token = Tools.getAccessToken(
+            Values.client_id, Values.client_secret, self)
+        if access_token == False:
+            self.showMain()
+            return 0
         if not path:
             self.showMain()
             return 0
         if mode == 0:
             temp = Tools.getPhoto(path)
             if temp:
-                self.base64_photo = temp
-                del temp
+                base64_photo = temp
             else:
-                del temp
                 self.showMain()
                 return 0
-            self.access_token = Tools.getAccessToken(
-                self.client_id, self.client_secret, self)
-            # time.sleep(10)
-            if self.access_token == False:
+            result = Tools.getDistinguishResult(
+                base64_photo, access_token, self, self.db)
+            if result == False:
                 self.showMain()
                 return 0
-            self.result = Tools.getDistinguishResult(
-                self.base64_photo, self.access_token, self, self.db)
-            del self.base64_photo, self.access_token
-            if self.result == False:
+            result = Tools.resultParser(result, self)
+            if result == False:
                 self.showMain()
                 return 0
-            self.result = Tools.resultParser(self.result, self)
-            if self.result == False:
-                self.showMain()
-                return 0
-            Tools.saveResult(self.result, mode, self,path)
+            Tools.saveResult(result, mode, self, path)
             self.showMain()
         else:
-            img_  = Tools.getPhotoFromPath(path, self)
+            img_ = Tools.getPhotoFromPath(path, self)
             if img_ == False:
                 self.showMain()
                 return 0
             else:
-                path_list,img_list = img_
-            self.access_token = Tools.getAccessToken(
-                self.client_id, self.client_secret, self)
-            if self.access_token == False:
-                self.showMain()
-                return 0
-            self.results = []
+                path_list, img_list = img_
+            results = []
             for i in img_list:
-                self.results.append(Tools.getDistinguishResult(
-                    i, self.access_token, self, self.db))
-            del self.access_token, img_list
-            if False in self.results:
+                results.append(Tools.getDistinguishResult(
+                    i, access_token, self, self.db))
+            if False in results:
                 self.showMain()
                 return 0
-            self.results = Tools.resultsParser(self.results, self)
-            if False in self.results:
+            results = Tools.resultsParser(results, self)
+            if False in results:
                 self.showMain()
                 return 0
-            Tools.saveResult(self.results, mode, self, path_list)
+            Tools.saveResult(results, mode, self, path_list)
             self.showMain()
 
     def cleanBackground(self):
@@ -190,7 +181,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             QtCore.QCoreApplication.translate("MainWindow", "恢复背景图片"))
         self.CleanBackground.clicked.connect(self.resetBackground)
         self.CleanBackground.setStyleSheet("background-color:rgb(255,255,255)")
-        self.Background.setPixmap(self.bg_2)
+        self.Background.setPixmap(QtGui.QPixmap())
 
     def resetBackground(self):
         self.CleanBackground.setText(
@@ -198,31 +189,25 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.CleanBackground.clicked.connect(self.cleanBackground)
         self.CleanBackground.setStyleSheet(
             "background-color:rgb(255, 255, 255)")
-        self.Background.setPixmap(self.bg_1)
+        self.Background.setPixmap(self.bg)
 
     def importBackground(self):
-        path = Tools.getPath(2,self)
+        path = Tools.getPath(2, self)
         if not path:
             return 0
         self.resetBackground()
-        self.bg_1 = QtGui.QPixmap(path)
-        self.Background.setPixmap(self.bg_1)
-
-        
-
-    def initClient(self):
-        self.client_id = "MrM4zO5cStpSxD3TBi5qPzZt"
-        self.client_secret = "cFEAj5yCrxxck22fqAitegNYFDOnVCtV"
+        self.bg = QtGui.QPixmap(path)
+        self.Background.setPixmap(self.bg)
 
     def retranslateUi(self, MainWindow: QtWidgets.QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "口算批改程序"))
-        self.Author.setText(_translate("MainWindow", "作者:ChenHaoYan"))
-        self.Version.setText(_translate("MainWindow", self._VERSION))
+        self.Author.setText(_translate("MainWindow", "作者:"+Values.author))
+        self.Version.setText(_translate("MainWindow", Values.version))
         self.Title.setText(_translate("MainWindow", "口算批改程序"))
         self.OpenImage.setText(_translate("MainWindow", "打开图片"))
         self.Exit.setText(_translate("MainWindow", "退出"))
         self.label.setText(_translate("MainWindow", "请点击开始识别按钮以开始识别。"))
         self.CleanBackground.setText(_translate("MainWindow", "清除背景图片"))
-        self.SetBackground.setText(_translate("MainWindow","选择背景图片"))
+        self.SetBackground.setText(_translate("MainWindow", "选择背景图片"))
         self.WaitText.setText(_translate("MainWindow", "正在识别中,请等一下。"))

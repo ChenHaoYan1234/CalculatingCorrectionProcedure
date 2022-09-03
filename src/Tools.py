@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import base64
 import csv
 import getpass
@@ -7,6 +8,7 @@ import time
 import requests
 import ImageData
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
+import Values
 
 
 def getPath(mode: int, window) -> str:
@@ -128,8 +130,7 @@ def getAccessToken(client_id: str, client_secret: str, window) -> str:
 
 def hasProp(obj: dict, prop: str):
     try:
-        temp = obj[prop]
-        del temp
+        obj[prop]
         return True
     except Exception:
         return False
@@ -232,7 +233,8 @@ def resultsParser(results: list, window=None) -> list:
 
 
 def getMode(window) -> 0 | 1:
-    msg = QMessageBox(QMessageBox.Icon.Question, "请选择口算图片打开方式", "请选择口算图片打开方式")
+    msg = QMessageBox(QMessageBox.Icon.Question,
+                      "请选择口算图片打开方式", "请选择口算图片打开方式", parent=window)
     file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
     dir_btn = msg.addButton(window.tr("打开文件夹"), QMessageBox.ButtonRole.NoRole)
     msg.setDefaultButton(file_btn)
@@ -347,3 +349,26 @@ def saveResult(result: list, mode: int, window, file_or_dir_name=None) -> None:
             QMessageBox.StandardButton.Ok,
             QMessageBox.StandardButton.Ok
         )
+
+
+def found_upgrade(window):
+    try:
+        url = Values.upgrade_url + "info"
+        response = requests.get(url)
+        response_json: dict = response.json()
+        if Values.version != response_json["version"]:
+            msg = QMessageBox(QMessageBox.Icon.Question, "有可用更新", "有可用更新,\n最新版本为" +
+                              response_json["version"]+",\n是否安装更新?", parent=window)
+            ok_btn = msg.addButton(
+                window.tr("是"), QMessageBox.ButtonRole.AcceptRole)
+            cancel_btn = msg.addButton(
+                window.tr("否"), QMessageBox.ButtonRole.RejectRole)
+            msg.setDefaultButton(ok_btn)
+            msg.setEscapeButton(cancel_btn)
+            msg.exec_()
+            if msg.clickedButton() == ok_btn:
+                os.execv("Update.exe",())
+            else:
+                return 0
+    except:
+        return 0
