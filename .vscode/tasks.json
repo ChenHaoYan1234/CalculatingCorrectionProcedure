@@ -4,16 +4,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "编译ui文件",
-            "type": "shell",
-            "command": "pyuic5 -o ${workspaceFolder}\\src\\MainWindow_.py ${workspaceFolder}\\ui\\MainWindow.ui & pyuic5 -o ${workspaceFolder}\\src\\SettingMenu_.py ${workspaceFolder}\\ui\\SettingMenu.ui",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
             "label": "打包可执行文件",
             "type": "shell",
             "command": "${workspaceFolder}\\build.bat",

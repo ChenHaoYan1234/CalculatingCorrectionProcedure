@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import base64
 import csv
-import getpass
 import os
 import sys
 import time
 import requests
-import ImageData
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 import Values
 
 
-def getPath(mode: int, window) -> str:
+def getPath(mode, window):
     if mode == 0:
         path = QFileDialog.getOpenFileName(
             window,
@@ -65,14 +63,14 @@ def getPath(mode: int, window) -> str:
             return path[0]
 
 
-def getPhoto(path: str) -> bytes:
+def getPhoto(path):
     file = open(path, 'rb')
     img = base64.b64encode(file.read())
     file.close()
     return img
 
 
-def getPhotoFromPath(path: str, window) -> list:
+def getPhotoFromPath(path, window):
     img_name_list = []
     img_base64_list = []
     if os.path.isdir(path):
@@ -92,7 +90,7 @@ def getPhotoFromPath(path: str, window) -> list:
         return [False, False]
 
 
-def getAccessToken(client_id: str, client_secret: str, window) -> str:
+def getAccessToken(client_id, client_secret, window):
     host = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' + \
         client_id+'&client_secret='+client_secret
     try:
@@ -128,7 +126,7 @@ def getAccessToken(client_id: str, client_secret: str, window) -> str:
             return False
 
 
-def hasProp(obj: dict, prop: str):
+def hasProp(obj, prop):
     try:
         obj[prop]
         return True
@@ -136,7 +134,7 @@ def hasProp(obj: dict, prop: str):
         return False
 
 
-def getDistinguishResult(base64_photo: bytes, access_token: str, window, db: ImageData.ImageData) -> dict:
+def getDistinguishResult(base64_photo, access_token, window, db):
     if db.getResultFromImage(base64_photo) != None:
         return db.getResultFromImage(base64_photo)
     host = "https://aip.baidubce.com/rest/2.0/ocr/v1/doc_analysis"
@@ -179,7 +177,7 @@ def getDistinguishResult(base64_photo: bytes, access_token: str, window, db: Ima
             return False
 
 
-def resultParser(result: dict, window) -> list:
+def resultParser(result, window):
     try:
         result_len = len(result["results"])
         result_list = []
@@ -222,7 +220,7 @@ def resultParser(result: dict, window) -> list:
         return False
 
 
-def resultsParser(results: list, window=None) -> list:
+def resultsParser(results, window=None):
     results_ = []
     for i in results:
 
@@ -232,28 +230,31 @@ def resultsParser(results: list, window=None) -> list:
     return results_
 
 
-def getMode(window) -> 0 | 1:
+def getMode(window):
     msg = QMessageBox(QMessageBox.Icon.Question,
                       "请选择口算图片打开方式", "请选择口算图片打开方式", parent=window)
     file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
     dir_btn = msg.addButton(window.tr("打开文件夹"), QMessageBox.ButtonRole.NoRole)
-    msg.setDefaultButton(file_btn)
-    msg.setEscapeButton(file_btn)
+    cancel_btn = msg.addButton(
+        window.tr("取消"), QMessageBox.ButtonRole.RejectRole)
+    msg.setEscapeButton(cancel_btn)
     msg.exec_()
     if msg.clickedButton() == file_btn:
         return 0
-    else:
+    elif msg.clickedButton() == dir_btn:
         return 1
+    else:
+        return 2
 
 
-def saveResult(result: list, mode: int, window, file_or_dir_name=None) -> None:
+def saveResult(result, mode, window, path=None):
     if mode == 0:
         path = QFileDialog.getSaveFileName(
             window,
             "请选择保存路径",
             os.path.dirname(os.path.realpath(sys.argv[0])) +
             "\\" +
-            file_or_dir_name.split(".")[0] +
+            path.split(".")[0] +
             "-" +
             time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
             ".csv",
@@ -313,7 +314,7 @@ def saveResult(result: list, mode: int, window, file_or_dir_name=None) -> None:
     else:
         for i in range(0, len(result)):
             try:
-                name: str = file_or_dir_name[i]
+                name: str = path[i]
                 name = name.replace("jpge", "csv")
                 name = name.replace("jpg", "csv")
                 name = name.replace("bmp", "csv")
@@ -367,8 +368,35 @@ def found_upgrade(window):
             msg.setEscapeButton(cancel_btn)
             msg.exec_()
             if msg.clickedButton() == ok_btn:
-                os.execv("Update.exe",())
+                os.execv(os.path.dirname(os.path.realpath(
+                    sys.argv[0]))+"\\Updater.exe", ("_",))
             else:
                 return 0
+        else:
+            QMessageBox.information(
+                window, "", "你使用的是最新版", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
     except:
-        return 0
+        QMessageBox.warning(
+            window, "", "检查更新失败", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+
+
+def download_updater(window):
+    try:
+        has_updater = os.path.isfile(os.path.dirname(os.path.realpath(
+            sys.argv[0]))+"\\Updater.exe")
+        has_upgrade = os.path.isfile(os.path.dirname(os.path.realpath(
+            sys.argv[0]))+"\\Upgrade.exe")
+        if (not has_updater) and (not has_upgrade):
+            response = requests.get(
+                Values.upgrade_url+"Updater.exe", allow_redirects=True)
+            updater = open(os.path.dirname(os.path.realpath(
+                sys.argv[0]))+"\\Updater.exe", "wb")
+            updater.write(response.content)
+            updater.close()
+            return
+        if has_upgrade:
+            os.rename(os.path.dirname(os.path.realpath(
+                sys.argv[0]))+"\\Upgrade.exe", os.path.dirname(os.path.realpath(sys.argv[0]))+"\\Updater.exe")
+    except:
+        QMessageBox.critical(
+            window, "", "无法下载更新器", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
