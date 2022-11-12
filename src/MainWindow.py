@@ -30,8 +30,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.centralwidget.setObjectName("centralwidget")
         self.Main = QtWidgets.QFrame(self.centralwidget)
         self.Main.setGeometry(QtCore.QRect(0, 0, 600, 500))
-        self.Main.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.Main.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.Main.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.Main.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self.Main.setObjectName("Main")
         self.bg = QtGui.QPixmap(os.path.dirname(
             os.path.realpath(sys.argv[0]))+"\\bg\\bg2.png")
@@ -67,8 +67,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Help.setObjectName("label")
         self.Wait = QtWidgets.QFrame(self.centralwidget)
         self.Wait.setGeometry(QtCore.QRect(0, 0, 600, 500))
-        self.Wait.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.Wait.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.Wait.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.Wait.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self.Wait.setObjectName("Wait")
         self.WaitText = QtWidgets.QLabel(self.Wait)
         self.WaitText.setGeometry(QtCore.QRect(300, 200, 290, 100))
@@ -91,7 +91,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             os.path.dirname(os.path.realpath(sys.argv[0]))+"\\image.db")
         try:
             sys.argv[1]
-            QtWidgets.QMessageBox.information(None, "", "已更新至"+Values.version+"。",
+            QtWidgets.QMessageBox.information(self, "", "已更新至"+Values.version+"。",
                                               QtWidgets.QMessageBox.StandardButton.Ok, QtWidgets.QMessageBox.StandardButton.Ok)
         except:
             pass
@@ -145,20 +145,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             if img_ == False:
                 self.showMain()
                 return 0
-            else:
-                path_list, img_list = img_
+            path_list:list[str] = img_[0]
+            img_list:list[bytes] = img_[1]
             results = []
             for i in img_list:
                 results.append(Tools.getDistinguishResult(
                     i, access_token, self, self.db))
-            if False in results:
-                self.showMain()
-                return 0
             results = Tools.resultsParser(results, self)
-            if False in results:
+            if results == False:
                 self.showMain()
                 return 0
-            Tools.saveResult(results, mode, self, path_list)
+            Tools.saveResult(results, mode, self)
             self.showMain()
 
     def setting(self):

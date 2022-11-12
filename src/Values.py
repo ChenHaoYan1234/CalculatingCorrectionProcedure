@@ -7,4 +7,4 @@ version = "1.2.5"
 client_id = "MrM4zO5cStpSxD3TBi5qPzZt"
 client_secret = "cFEAj5yCrxxck22fqAitegNYFDOnVCtV"
 # Upgrade
-upgrade_url = "http://localhost:8080/"
+update_url = "http://localhost:8080/"

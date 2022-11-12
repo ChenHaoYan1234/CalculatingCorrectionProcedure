@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
 import MainWindow
-import Values
-import Tools
 from PyQt5.QtWidgets import QApplication
 
 

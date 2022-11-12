@@ -71,23 +71,23 @@ def getPhoto(path):
 
 
 def getPhotoFromPath(path, window):
-    img_name_list = []
-    img_base64_list = []
+    img_list_list:list[str] = []
+    img_base64_list:list[bytes] = []
     if os.path.isdir(path):
         for file in os.listdir(path):
             if file.split(".")[-1] in ["jpg", "jpge", "png", "bmp"]:
-                img_name_list.append(file)
+                img_list_list.append(file)
                 img_base64_list.append(getPhoto(path+"\\"+file))
-        if len(img_name_list) == 0:
+        if len(img_list_list) == 0:
             QMessageBox.critical(window, "错误", "请选择一个有图片的文件夹！",
                                  QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
             return False
         else:
-            return [img_name_list, img_base64_list]
+            return [img_list_list, img_base64_list]
     else:
         QMessageBox.critical(window, "错误", "请选择一个文件夹！",
                              QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-        return [False, False]
+        return False
 
 
 def getAccessToken(client_id, client_secret, window):
@@ -101,7 +101,7 @@ def getAccessToken(client_id, client_secret, window):
             "错误",
             "请求失败!请检查是否连接因特网后重试。",
             QMessageBox.StandardButton.Retry |
-            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,  # type: ignore
             QMessageBox.StandardButton.Retry
         )
         if msg == QMessageBox.StandardButton.Retry:
@@ -117,7 +117,7 @@ def getAccessToken(client_id, client_secret, window):
             "错误",
             "请求失败!服务异常,请稍后重试。",
             QMessageBox.StandardButton.Retry |
-            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,  # type: ignore
             QMessageBox.StandardButton.Retry
         )
         if msg == QMessageBox.StandardButton.Retry:
@@ -150,7 +150,7 @@ def getDistinguishResult(base64_photo, access_token, window, db):
             "错误",
             "请求失败!请检查是否连接因特网后重试。",
             QMessageBox.StandardButton.Retry |
-            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,  # type: ignore
             QMessageBox.StandardButton.Retry
         )
         if msg == QMessageBox.StandardButton.Retry:
@@ -167,7 +167,7 @@ def getDistinguishResult(base64_photo, access_token, window, db):
             "错误",
             "请求失败!服务异常,请稍后重试。",
             QMessageBox.StandardButton.Retry |
-            QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,  # type: ignore
             QMessageBox.StandardButton.Retry
         )
         print(response.json())
@@ -182,7 +182,7 @@ def resultParser(result, window):
         result_len = len(result["results"])
         result_list = []
         for i in range(result_len):
-            temp_text: str = result["results"][i]["words"]["word"]
+            temp_text = result["results"][i]["words"]["word"]
             temp_text = temp_text.split("=")
             if len(temp_text) != 2:
                 QMessageBox.critical(
@@ -193,8 +193,8 @@ def resultParser(result, window):
                     QMessageBox.StandardButton.Ok
                 )
                 return False
-            temp_print: str = temp_text[0]
-            temp_handwriting: str = temp_text[1]
+            temp_print = temp_text[0]
+            temp_handwriting = temp_text[1]
             temp_handwriting = float(eval(temp_handwriting.replace("/", "1")))
             temp_1 = temp_print
             temp_1 = temp_1.replace("×", "*")
@@ -226,7 +226,7 @@ def resultsParser(results, window=None):
 
         results_.append(resultParser(i, window))
         if False in results_:
-            return [False, ]
+            return False
     return results_
 
 
@@ -236,7 +236,7 @@ def getMode(window):
     file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
     dir_btn = msg.addButton(window.tr("打开文件夹"), QMessageBox.ButtonRole.NoRole)
     cancel_btn = msg.addButton(
-        window.tr("取消"), QMessageBox.ButtonRole.RejectRole)
+        "取消", QMessageBox.ButtonRole.RejectRole)
     msg.setEscapeButton(cancel_btn)
     msg.exec_()
     if msg.clickedButton() == file_btn:
@@ -247,22 +247,21 @@ def getMode(window):
         return 2
 
 
-def saveResult(result, mode, window, path=None):
+def saveResult(result, mode, window, path: str = ""):
     if mode == 0:
         path = QFileDialog.getSaveFileName(
             window,
             "请选择保存路径",
             os.path.dirname(os.path.realpath(sys.argv[0])) +
             "\\" +
-            path.split(".")[0] +
+            path.split(".")[0] +  # type: ignore
             "-" +
             time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
             ".csv",
             "CSV File(*.csv);;All File(*.*)"
-        )
-        path = path[0]
+        )[0]
     elif mode == 1:
-        path: str = QFileDialog.getExistingDirectory(
+        path = QFileDialog.getExistingDirectory(
             window,
             "请选择保存文件夹",
             os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -354,16 +353,16 @@ def saveResult(result, mode, window, path=None):
 
 def found_upgrade(window):
     try:
-        url = Values.upgrade_url + "info"
+        url = Values.update_url + "info"
         response = requests.get(url)
         response_json: dict = response.json()
         if Values.version != response_json["version"]:
             msg = QMessageBox(QMessageBox.Icon.Question, "有可用更新", "有可用更新,\n最新版本为" +
                               response_json["version"]+",\n是否安装更新?", parent=window)
             ok_btn = msg.addButton(
-                window.tr("是"), QMessageBox.ButtonRole.AcceptRole)
+                "是", QMessageBox.ButtonRole.AcceptRole)
             cancel_btn = msg.addButton(
-                window.tr("否"), QMessageBox.ButtonRole.RejectRole)
+                "否", QMessageBox.ButtonRole.RejectRole)
             msg.setDefaultButton(ok_btn)
             msg.setEscapeButton(cancel_btn)
             msg.exec_()
@@ -388,7 +387,7 @@ def download_updater(window):
             sys.argv[0]))+"\\Upgrade.exe")
         if (not has_updater) and (not has_upgrade):
             response = requests.get(
-                Values.upgrade_url+"Updater.exe", allow_redirects=True)
+                Values.update_url+"Updater.exe", allow_redirects=True)
             updater = open(os.path.dirname(os.path.realpath(
                 sys.argv[0]))+"\\Updater.exe", "wb")
             updater.write(response.content)

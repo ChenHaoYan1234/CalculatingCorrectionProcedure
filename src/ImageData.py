@@ -25,7 +25,7 @@ class ImageData():
             )
             self.connect.commit()
 
-    def getResultFromImage(self, img: bytes) -> dict:
+    def getResultFromImage(self, img: bytes):
         data = self.cursor.execute(
             "SELECT image, result  from IMAGE")
         for image, result in data:

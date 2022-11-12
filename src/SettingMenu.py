@@ -2,12 +2,12 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import Values
 import Tools
-
+import MainWindow
 
 class Ui_SettingMenu(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.parent_window = parent
+        self.parent_window:MainWindow.Ui_MainWindow = parent
         self.setupUi()
 
     def setupUi(self):
@@ -34,11 +34,11 @@ class Ui_SettingMenu(QtWidgets.QDialog):
         self.About.setObjectName("About")
         self.Author = QtWidgets.QLabel(self.About)
         self.Author.setGeometry(QtCore.QRect(0, 100, 300, 20))
-        self.Author.setAlignment(QtCore.Qt.AlignCenter)
+        self.Author.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.Author.setObjectName("Author")
         self.Version = QtWidgets.QLabel(self.About)
         self.Version.setGeometry(QtCore.QRect(0, 120, 300, 20))
-        self.Version.setAlignment(QtCore.Qt.AlignCenter)
+        self.Version.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.Version.setObjectName("Version")
         self.CheckUpdate = QtWidgets.QPushButton(self.About)
         self.CheckUpdate.setGeometry(QtCore.QRect(110, 180, 75, 30))
@@ -58,7 +58,7 @@ class Ui_SettingMenu(QtWidgets.QDialog):
     def update(self):
         self.parent_window.bg = self.bg
         self.parent_window.Background.setPixmap(self.parent_window.bg)
-        Tools.download_updater()
+        Tools.download_updater(self)
         Tools.found_upgrade(self)
 
     def closeEvent(self, event):
