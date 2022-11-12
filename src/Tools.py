@@ -4,14 +4,16 @@ import csv
 import os
 import sys
 import time
+from typing import Any, Literal
 
 import requests
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-
+from ImageData import ImageData
 import Values
+from Values import STATUS
 
 
-def getPath(mode, window):
+def getPath(mode: int, window) -> str | Literal[STATUS.ERROR]:
     if mode == 0:
         path = QFileDialog.getOpenFileName(
             window,
@@ -27,7 +29,7 @@ def getPath(mode, window):
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
-            return False
+            return STATUS.ERROR
         else:
             return path[0]
     elif mode == 1:
@@ -41,7 +43,7 @@ def getPath(mode, window):
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
-            return False
+            return STATUS.ERROR
         else:
             return path
     else:
@@ -60,39 +62,52 @@ def getPath(mode, window):
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
-            return False
+            return STATUS.ERROR
         else:
             return path[0]
 
 
-def getPhoto(path):
-    file = open(path, 'rb')
-    img = base64.b64encode(file.read())
-    file.close()
-    return img
+def getPhoto(path: str, window):
+    try:
+        file = open(path, 'rb')
+        img = base64.b64encode(file.read())
+        file.close()
+        return img
+    except Exception as e:
+        QMessageBox.critical(
+            window,
+            "错误",
+            "无法打开文件！\n错误信息"+str(e.args),
+            QMessageBox.StandardButton.Ok,
+            QMessageBox.StandardButton.Ok
+        )
+        return STATUS.ERROR
 
 
-def getPhotoFromPath(path, window):
+def getPhotoFromPath(path: str, window) -> list[list[str] | list[bytes]] | Literal[STATUS.ERROR]:
     img_list_list: list[str] = []
     img_base64_list: list[bytes] = []
     if os.path.isdir(path):
         for file in os.listdir(path):
             if file.split(".")[-1] in ["jpg", "jpge", "png", "bmp"]:
                 img_list_list.append(file)
-                img_base64_list.append(getPhoto(path+"\\"+file))
+                temp = getPhoto(path+"\\"+file, window)
+                if temp == STATUS.ERROR:
+                    return STATUS.ERROR
+                img_base64_list.append(temp)
         if len(img_list_list) == 0:
             QMessageBox.critical(window, "错误", "请选择一个有图片的文件夹！",
                                  QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-            return False
+            return STATUS.ERROR
         else:
             return [img_list_list, img_base64_list]
     else:
         QMessageBox.critical(window, "错误", "请选择一个文件夹！",
                              QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-        return False
+        return STATUS.ERROR
 
 
-def getAccessToken(client_id, client_secret, window):
+def getAccessToken(client_id: str, client_secret: str, window) -> str | Literal[STATUS.CANCEL]:
     host = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' + \
         client_id+'&client_secret='+client_secret
     try:
@@ -109,9 +124,9 @@ def getAccessToken(client_id, client_secret, window):
         if msg == QMessageBox.StandardButton.Retry:
             return getAccessToken(client_id, client_secret, window)
         else:
-            return False
+            return STATUS.CANCEL
     if response and (not ("error_msg" in response.json())):
-        access_token = response.json()["access_token"]
+        access_token: str = response.json()["access_token"]
         return access_token
     else:
         msg = QMessageBox.critical(
@@ -125,10 +140,10 @@ def getAccessToken(client_id, client_secret, window):
         if msg == QMessageBox.StandardButton.Retry:
             return getAccessToken(client_id, client_secret, window)
         else:
-            return False
+            return STATUS.CANCEL
 
 
-def hasProp(obj, prop):
+def hasProp(obj: dict, prop: Any) -> bool:
     try:
         obj[prop]
         return True
@@ -136,9 +151,10 @@ def hasProp(obj, prop):
         return False
 
 
-def getDistinguishResult(base64_photo, access_token, window, db):
-    if db.getResultFromImage(base64_photo) != None:
-        return db.getResultFromImage(base64_photo)
+def getDistinguishResult(base64_photo: bytes, access_token: str, window, db: ImageData) -> dict | Literal[STATUS.CANCEL]:
+    db_data = db.getResultFromImage(base64_photo)
+    if db_data != STATUS.NOTFOUND:
+        return db_data
     host = "https://aip.baidubce.com/rest/2.0/ocr/v1/doc_analysis"
     params = {"image": base64_photo,
               "language_type": "CHN_ENG", "result_type": "big"}
@@ -158,7 +174,7 @@ def getDistinguishResult(base64_photo, access_token, window, db):
         if msg == QMessageBox.StandardButton.Retry:
             return getDistinguishResult(base64_photo, access_token, window, db)
         else:
-            return False
+            return STATUS.CANCEL
     if response and (not ("error_msg" in response.json())):
         result = response.json()
         db.newResult(base64_photo, result)
@@ -176,10 +192,10 @@ def getDistinguishResult(base64_photo, access_token, window, db):
         if msg == QMessageBox.StandardButton.Retry:
             return getDistinguishResult(base64_photo, access_token, window, db)
         else:
-            return False
+            return STATUS.CANCEL
 
 
-def resultParser(result, window):
+def resultParser(result: dict, window) -> list[list] | Literal[STATUS.ERROR]:
     try:
         result_len = len(result["results"])
         result_list = []
@@ -194,7 +210,7 @@ def resultParser(result, window):
                     QMessageBox.StandardButton.Ok,
                     QMessageBox.StandardButton.Ok
                 )
-                return False
+                return STATUS.ERROR
             temp_print = temp_text[0]
             temp_handwriting = temp_text[1]
             temp_handwriting = float(eval(temp_handwriting.replace("/", "1")))
@@ -219,20 +235,19 @@ def resultParser(result, window):
             QMessageBox.StandardButton.Ok,
             QMessageBox.StandardButton.Ok
         )
-        return False
+        return STATUS.ERROR
 
 
-def resultsParser(results, window=None):
+def resultsParser(results: list, window) -> list[list[list[Any]]] | Literal[STATUS.ERROR]:
     results_ = []
     for i in results:
-
         results_.append(resultParser(i, window))
-        if False in results_:
-            return False
+        if STATUS.ERROR in results_:
+            return STATUS.ERROR
     return results_
 
 
-def getMode(window):
+def getMode(window) -> Literal[0, 1, 2]:
     msg = QMessageBox(QMessageBox.Icon.Question,
                       "请选择口算图片打开方式", "请选择口算图片打开方式", parent=window)
     file_btn = msg.addButton(window.tr("打开文件"), QMessageBox.ButtonRole.YesRole)
@@ -249,7 +264,7 @@ def getMode(window):
         return 2
 
 
-def saveResult(result, mode, window, path: str = ""):
+def saveResult(result: list, mode: int, window, path: str = "") -> Literal[STATUS.OK, STATUS.ERROR]:
     if mode == 0:
         path = QFileDialog.getSaveFileName(
             window,
@@ -277,7 +292,7 @@ def saveResult(result, mode, window, path: str = ""):
                              QMessageBox.StandardButton.Ok,
                              QMessageBox.StandardButton.Ok
                              )
-        return 0
+        return STATUS.ERROR
     if mode == 0:
         try:
             result_file = open(path, "w", encoding="utf-8")
@@ -294,6 +309,7 @@ def saveResult(result, mode, window, path: str = ""):
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
+            return STATUS.OK
         except PermissionError:
             QMessageBox.critical(
                 window,
@@ -302,7 +318,7 @@ def saveResult(result, mode, window, path: str = ""):
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
-            return 0
+            return STATUS.ERROR
         except Exception as e:
             QMessageBox.critical(
                 window,
@@ -311,7 +327,7 @@ def saveResult(result, mode, window, path: str = ""):
                 QMessageBox.StandardButton.Ok,
                 QMessageBox.StandardButton.Ok
             )
-            return 0
+            return STATUS.ERROR
     else:
         for i in range(0, len(result)):
             try:
@@ -331,7 +347,7 @@ def saveResult(result, mode, window, path: str = ""):
                 QMessageBox.critical(
                     window,
                     "错误",
-                    "权限不足！",
+                    "权限不足或文件已被占用！",
                     QMessageBox.StandardButton.Ok,
                     QMessageBox.StandardButton.Ok
                 )
@@ -351,6 +367,7 @@ def saveResult(result, mode, window, path: str = ""):
             QMessageBox.StandardButton.Ok,
             QMessageBox.StandardButton.Ok
         )
+        return STATUS.OK
 
 
 def found_upgrade(window):
@@ -372,13 +389,15 @@ def found_upgrade(window):
                 os.execv(os.path.dirname(os.path.realpath(
                     sys.argv[0]))+"\\Updater.exe", ("_",))
             else:
-                return 0
+                return STATUS.CANCEL
         else:
             QMessageBox.information(
                 window, "", "你使用的是最新版", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+            return STATUS.CANCEL
     except:
         QMessageBox.warning(
             window, "", "检查更新失败", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+        return STATUS.ERROR
 
 
 def download_updater(window):
@@ -394,10 +413,12 @@ def download_updater(window):
                 sys.argv[0]))+"\\Updater.exe", "wb")
             updater.write(response.content)
             updater.close()
-            return
+
         if has_upgrade:
             os.rename(os.path.dirname(os.path.realpath(
                 sys.argv[0]))+"\\Upgrade.exe", os.path.dirname(os.path.realpath(sys.argv[0]))+"\\Updater.exe")
+        return STATUS.OK
     except:
         QMessageBox.critical(
             window, "", "无法下载更新器", QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+        return STATUS.ERROR

@@ -8,7 +8,8 @@ import ImageData
 import SettingMenu
 import Tools
 import Values
-
+from Values import STATUS
+from typing import _T
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -82,12 +83,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.showMain()
         self.db = ImageData.ImageData(
             os.path.dirname(os.path.realpath(sys.argv[0]))+"\\image.db")
-        try:
-            sys.argv[1]
+        if len(sys.argv) == 2:
             QtWidgets.QMessageBox.information(self, "", "已更新至"+Values.version+"。",
                                               QtWidgets.QMessageBox.StandardButton.Ok, QtWidgets.QMessageBox.StandardButton.Ok)
-        except:
-            pass
 
     def closeEvent(self, event):
         self.db.close()
@@ -105,49 +103,47 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.showWait()
         mode = Tools.getMode(self)
         if mode == 2:
-            return 0
+            return STATUS.CANCEL
         path = Tools.getPath(mode, self)
         access_token = Tools.getAccessToken(
             Values.client_id, Values.client_secret, self)
-        if access_token == False:
+        if access_token == STATUS.CANCEL:
             self.showMain()
-            return 0
-        if not path:
+            return STATUS.CANCEL
+        if path == STATUS.ERROR:
             self.showMain()
-            return 0
+            return STATUS.ERROR
         if mode == 0:
-            temp = Tools.getPhoto(path)
-            if temp:
-                base64_photo = temp
-            else:
+            base64_photo = Tools.getPhoto(path,self)
+            if base64_photo == STATUS.ERROR:
                 self.showMain()
-                return 0
+                return STATUS.ERROR
             result = Tools.getDistinguishResult(
                 base64_photo, access_token, self, self.db)
-            if result == False:
+            if result == STATUS.CANCEL:
                 self.showMain()
-                return 0
+                return
             result = Tools.resultParser(result, self)
-            if result == False:
+            if result == STATUS.ERROR:
                 self.showMain()
-                return 0
+                return
             Tools.saveResult(result, mode, self, path)
             self.showMain()
         else:
             img_ = Tools.getPhotoFromPath(path, self)
-            if img_ == False:
+            if img_ == STATUS.ERROR:
                 self.showMain()
-                return 0
-            path_list: list[str] = img_[0]
-            img_list: list[bytes] = img_[1]
+                return
+            path_list: list[str] = img_[0]  # type: ignore
+            img_list: list[bytes] = img_[1]  # type: ignore
             results = []
             for i in img_list:
                 results.append(Tools.getDistinguishResult(
                     i, access_token, self, self.db))
             results = Tools.resultsParser(results, self)
-            if results == False:
+            if results == STATUS.ERROR:
                 self.showMain()
-                return 0
+                return
             Tools.saveResult(results, mode, self)
             self.showMain()
 

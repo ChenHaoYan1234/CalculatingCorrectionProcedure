@@ -4,6 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import MainWindow
 import Tools
 import Values
+from Values import STATUS
 
 
 class Ui_SettingMenu(QtWidgets.QDialog):
@@ -60,8 +61,9 @@ class Ui_SettingMenu(QtWidgets.QDialog):
     def update(self):
         self.parent_window.bg = self.bg
         self.parent_window.Background.setPixmap(self.parent_window.bg)
-        Tools.download_updater(self)
-        Tools.found_upgrade(self)
+        result = Tools.download_updater(self)
+        if result == STATUS.OK:
+            Tools.found_upgrade(self)
 
     def closeEvent(self, event):
         self.parent_window.bg = self.bg
@@ -69,7 +71,7 @@ class Ui_SettingMenu(QtWidgets.QDialog):
         event.accept()
 
     def retranslateUi(self):
-        _translate = QtCore.QCoreApplication.translate
+        _translate = QtCore.QCoreApplication.translate  # type: ignore
         self.setWindowTitle(_translate("SettingMenu", "设置"))
         self.SetBackground.setText(_translate("SettingMenu", "选择背景图片"))
         self.Setting.setTabText(self.Setting.indexOf(

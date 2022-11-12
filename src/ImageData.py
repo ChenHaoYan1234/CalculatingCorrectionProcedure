@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
 import sqlite3
-
+from Values import STATUS
+from typing import Literal
 
 class ImageData():
     def __init__(self, db_path: str) -> None:
         self.connect = sqlite3.connect(db_path)
         self.cursor = self.connect.cursor()
         self.initDB()
+        return
 
     def initDB(self) -> None:
         self.cursor.execute(
@@ -25,20 +27,23 @@ class ImageData():
             """
             )
             self.connect.commit()
+            return
 
-    def getResultFromImage(self, img: bytes):
+    def getResultFromImage(self, img: bytes) -> dict|Literal[STATUS.NOTFOUND]:
         data = self.cursor.execute(
             "SELECT image, result  from IMAGE")
         for image, result in data:
             if image == img:
                 return json.loads(result)
-        return None
+        return STATUS.NOTFOUND
 
     def newResult(self, img: bytes, result: dict) -> None:
         result_ = json.dumps(result)
         self.cursor.execute(
             "INSERT INTO IMAGE (IMAGE,RESULT) VALUES (?, '"+result_+"')", (img,))
         self.connect.commit()
+        return
 
     def close(self) -> None:
         self.connect.close()
+        return
