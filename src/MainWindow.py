@@ -103,6 +103,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.showWait()
         mode = Tools.getMode(self)
         if mode == 2:
+            self.showMain()
             return STATUS.CANCEL
         path = Tools.getPath(mode, self)
         access_token = Tools.getAccessToken(

@@ -53,8 +53,8 @@ class Ui_SettingMenu(QtWidgets.QDialog):
 
     def setBackground(self):
         path = Tools.getPath(2, self)
-        if not path:
-            return 0
+        if path == STATUS.ERROR:
+            return STATUS.ERROR
         self.bg = QtGui.QPixmap(path)
         self.Background.setPixmap(self.bg)
 
