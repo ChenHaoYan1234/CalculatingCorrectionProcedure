@@ -9,7 +9,7 @@ import SettingMenu
 import Tools
 import Values
 from Values import STATUS
-from typing import _T
+
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -114,7 +114,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.showMain()
             return STATUS.ERROR
         if mode == 0:
-            base64_photo = Tools.getPhoto(path,self)
+            base64_photo = Tools.getPhoto(path, self)
             if base64_photo == STATUS.ERROR:
                 self.showMain()
                 return STATUS.ERROR

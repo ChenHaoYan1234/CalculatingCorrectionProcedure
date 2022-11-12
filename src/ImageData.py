@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 import sqlite3
-from Values import STATUS
 from typing import Literal
+
+from Values import STATUS
+
 
 class ImageData():
     def __init__(self, db_path: str) -> None:
@@ -29,7 +31,7 @@ class ImageData():
             self.connect.commit()
             return
 
-    def getResultFromImage(self, img: bytes) -> dict|Literal[STATUS.NOTFOUND]:
+    def getResultFromImage(self, img: bytes) -> dict | Literal[STATUS.NOTFOUND]:
         data = self.cursor.execute(
             "SELECT image, result  from IMAGE")
         for image, result in data:

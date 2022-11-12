@@ -8,8 +8,9 @@ from typing import Any, Literal
 
 import requests
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from ImageData import ImageData
+
 import Values
+from ImageData import ImageData
 from Values import STATUS
 
 
