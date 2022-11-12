@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import sqlite3
 import json
+import sqlite3
+
 
 class ImageData():
     def __init__(self, db_path: str) -> None:
@@ -15,13 +16,13 @@ class ImageData():
         table = [line[0] for line in table]
         if not ("IMAGE" in table):
             self.cursor.execute(
-                '''
+                """
             CREATE TABLE IMAGE
             (
             IMAGE          BLOB  PRIMARY KEY  NOT NULL,
             RESULT         TEXT               NOT NULL
             );
-            '''
+            """
             )
             self.connect.commit()
 

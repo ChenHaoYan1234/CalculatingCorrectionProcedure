@@ -4,8 +4,10 @@ import csv
 import os
 import sys
 import time
+
 import requests
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
 import Values
 
 
@@ -71,8 +73,8 @@ def getPhoto(path):
 
 
 def getPhotoFromPath(path, window):
-    img_list_list:list[str] = []
-    img_base64_list:list[bytes] = []
+    img_list_list: list[str] = []
+    img_base64_list: list[bytes] = []
     if os.path.isdir(path):
         for file in os.listdir(path):
             if file.split(".")[-1] in ["jpg", "jpge", "png", "bmp"]:

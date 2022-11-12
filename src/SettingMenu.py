@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
-import Values
-import Tools
+
 import MainWindow
+import Tools
+import Values
+
 
 class Ui_SettingMenu(QtWidgets.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.parent_window:MainWindow.Ui_MainWindow = parent
+        self.parent_window: MainWindow.Ui_MainWindow = parent
         self.setupUi()
 
     def setupUi(self):

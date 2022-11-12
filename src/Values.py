@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # Program info
 author = "ChenHaoYan"
 version = "1.2.5"

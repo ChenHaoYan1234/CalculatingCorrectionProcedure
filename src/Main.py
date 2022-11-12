@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
-import MainWindow
+
 from PyQt5.QtWidgets import QApplication
+
+import MainWindow
 
 
 def main():
