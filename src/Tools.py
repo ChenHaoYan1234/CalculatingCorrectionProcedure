@@ -7,22 +7,22 @@ import time
 from typing import Any, Literal, Optional
 
 import requests
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QWidget
 
 import Values
 from ImageData import ImageData
 from Values import STATUS
 
 
-def getPath(mode: int, window) -> str | Literal[STATUS.ERROR]:
+def getPath(mode: int, window:QWidget) -> str | Literal[STATUS.ERROR]:
     if mode == 0:
         path = QFileDialog.getOpenFileName(
             window,
             "请选择文件",
             os.path.dirname(os.path.realpath(sys.argv[0])),
             "Image File(*.jpg;*.jpge;*.png;*.bmp);;All File(*.*)"
-        )
-        if not os.path.isfile(path[0]):
+        )[0]
+        if not os.path.isfile(path):
             QMessageBox.critical(
                 window,
                 "错误",
@@ -32,7 +32,7 @@ def getPath(mode: int, window) -> str | Literal[STATUS.ERROR]:
             )
             return STATUS.ERROR
         else:
-            return path[0]
+            return path
     elif mode == 1:
         path = QFileDialog.getExistingDirectory(
             window, "打开文件夹", os.path.dirname(os.path.realpath(sys.argv[0])))
@@ -54,8 +54,8 @@ def getPath(mode: int, window) -> str | Literal[STATUS.ERROR]:
             os.path.dirname(os.path.realpath(sys.argv[0])) +
             "\\bg\\",
             "Image File(*.jpg;*.jpge;*.png;*.bmp);;All File(*.*)"
-        )
-        if not os.path.isfile(path[0]):
+        )[0]
+        if not os.path.isfile(path):
             QMessageBox.critical(
                 window,
                 "错误",
@@ -65,7 +65,7 @@ def getPath(mode: int, window) -> str | Literal[STATUS.ERROR]:
             )
             return STATUS.ERROR
         else:
-            return path[0]
+            return path
 
 
 def getPhoto(path: str, window):
@@ -240,11 +240,13 @@ def resultParser(result: dict, window) -> list[list] | Literal[STATUS.ERROR]:
 
 
 def resultsParser(results: list, window) -> list[list[list[Any]]] | Literal[STATUS.ERROR]:
-    results_ = []
+    results_:list[list[list[Any]]] = []
     for i in results:
-        results_.append(resultParser(i, window))
-        if STATUS.ERROR in results_:
+        result = resultParser(i, window)
+        if STATUS.ERROR == result:
             return STATUS.ERROR
+        else:
+            results_.append(result)
     return results_
 
 
