@@ -4,7 +4,7 @@ import csv
 import os
 import sys
 import time
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import requests
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -265,7 +265,7 @@ def getMode(window) -> Literal[0, 1, 2]:
         return 2
 
 
-def saveResult(result: list, mode: int, window, path: str = "") -> Literal[STATUS.OK, STATUS.ERROR]:
+def saveResult(result: list, mode: int, window, path: Optional[str] = None) -> Literal[STATUS.OK, STATUS.ERROR]:
     if mode == 0:
         path = QFileDialog.getSaveFileName(
             window,
