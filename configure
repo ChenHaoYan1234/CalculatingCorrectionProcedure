@@ -1,0 +1,43 @@
+#!/bin/python
+import os
+import sys
+import enum
+
+
+class OS(enum.Enum):
+    WIN32 = 0
+    LINUX = 1
+    OTHER = 2
+
+
+def getOS():
+    if sys.platform == "win32":
+        return OS.WIN32
+    elif sys.platform == "linux":
+        return OS.LINUX
+
+
+def writeConfig():
+    if os.path.exists("./config.txt"):
+        os.remove("./config.txt")
+    with open("./config.txt", "w") as f:
+        _os = getOS()
+        if _os == OS.WIN32:
+            f.write("DEL = del\n")
+            f.write("RMDIR = rmdir\n")
+            f.write("UPX = ./tools/win32/upx\n")
+        elif _os == OS.LINUX:
+            f.write("DEL = rm\n")
+            f.write("RMDIR = rmdir\n")
+            f.write("UPX = ./tools/linux/upx\n")
+
+
+def main():
+    if sys.version_info < (3, 11):
+        print("Please use Python 3.11 or later.")
+        return 0
+    writeConfig()
+
+
+if __name__ == "__main__":
+    main()
