@@ -28,7 +28,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Main.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self.Main.setObjectName("Main")
         self.bg = QtGui.QPixmap(os.path.dirname(
-            os.path.realpath(sys.argv[0]))+"\\bg\\bg2.png")
+            os.path.realpath(sys.argv[0]))+"/bg/bg2.png")
         self.Background = QtWidgets.QLabel(self.Main)
         self.Background.setGeometry(QtCore.QRect(0, 0, 600, 500))
         self.Background.setText("")
@@ -73,7 +73,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.WaitIcon = QtWidgets.QLabel(self.Wait)
         self.WaitIcon.setGeometry(QtCore.QRect(100, 150, 200, 200))
         self.WaitIcon.setText("")
-        self.WaitGif = QtGui.QMovie(".\\resource\\loading.git")
+        self.WaitGif = QtGui.QMovie("./resource/loading.git")
         self.WaitIcon.setMovie(self.WaitGif)
         self.WaitGif.start()
         self.WaitIcon.setObjectName("WaitIcon")
@@ -82,7 +82,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
         self.showMain()
         self.db = ImageData.ImageData(
-            os.path.dirname(os.path.realpath(sys.argv[0]))+"\\image.db")
+            os.path.dirname(os.path.realpath(sys.argv[0]))+"/image.db")
         if len(sys.argv) == 2:
             QtWidgets.QMessageBox.information(self, "", "已更新至"+Values.version+"。",
                                               QtWidgets.QMessageBox.StandardButton.Ok, QtWidgets.QMessageBox.StandardButton.Ok)

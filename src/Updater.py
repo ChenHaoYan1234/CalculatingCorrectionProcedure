@@ -8,20 +8,27 @@ from PySide6.QtWidgets import QMessageBox
 
 import Values
 
+if sys.platform == "win32":
+    temp_dir = os.getenv("TEMP", "C:/Windows/Temp")
+elif sys.platform == "linux":
+    temp_dir = os.getenv("TEMP", "/tmp")
+else:
+    temp_dir = os.getenv("TEMP", "/tmp")
+
 
 def download_update():
     update = requests.get(Values.update_url+"latest/", allow_redirects=True)
-    temp = open(os.getenv("TEMP", "C:\\Windows\\Temp")+"\\update.7z", "wb")
+    temp = open(temp_dir+"/update.7z", "wb")
     temp.write(update.content)
     temp.close()
 
 
 def extra_file():
     update = py7zr.SevenZipFile(
-        os.getenv("TEMP", "C:\\Windows\\Temp")+"\\update.7z", "r")
-    update.extractall(os.path.dirname(os.path.realpath(sys.argv[0]))+"\\")
+        temp_dir+"/update.7z", "r")
+    update.extractall(os.path.dirname(os.path.realpath(sys.argv[0]))+"/")
     update.close()
-    os.remove(os.getenv("TEMP", "C:\\Windows\\Temp")+"\\update.7z")
+    os.remove(temp_dir+"/update.7z")
 
 
 def main():
@@ -36,7 +43,7 @@ def main():
             QMessageBox.StandardButton.Ok
         )
         os.execv(os.path.dirname(os.path.realpath(
-            sys.argv[0]))+"\\Main.exe", ("first_run",))
+            sys.argv[0]))+"/Main.exe", ("first_run",))
     except:
         QMessageBox.information(
             None,  # type: ignore

@@ -52,7 +52,7 @@ def getPath(mode: int, window:QWidget) -> str | Literal[STATUS.ERROR]:
             window,
             "请选择文件",
             os.path.dirname(os.path.realpath(sys.argv[0])) +
-            "\\bg\\",
+            "/bg/",
             "Image File(*.jpg;*.jpge;*.png;*.bmp);;All File(*.*)"
         )[0]
         if not os.path.isfile(path):
@@ -92,7 +92,7 @@ def getPhotoFromPath(path: str, window) -> list[list[str] | list[bytes]] | Liter
         for file in os.listdir(path):
             if file.split(".")[-1] in ["jpg", "jpge", "png", "bmp"]:
                 img_list_list.append(file)
-                temp = getPhoto(path+"\\"+file, window)
+                temp = getPhoto(path+"/"+file, window)
                 if temp == STATUS.ERROR:
                     return STATUS.ERROR
                 img_base64_list.append(temp)
@@ -273,7 +273,7 @@ def saveResult(result: list, mode: int, window, path: Optional[str] = None) -> L
             window,
             "请选择保存路径",
             os.path.dirname(os.path.realpath(sys.argv[0])) +
-            "\\" +
+            "/" +
             path.split(".")[0] +  # type: ignore
             "-" +
             time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) +
@@ -339,7 +339,7 @@ def saveResult(result: list, mode: int, window, path: Optional[str] = None) -> L
                 name = name.replace("jpg", "csv")
                 name = name.replace("bmp", "csv")
                 name = name.replace("png", "csv")
-                result_file = open(path+"\\"+name, "w", encoding="utf-8")
+                result_file = open(path+"/"+name, "w", encoding="utf-8")
                 writer = csv.writer(result_file)
                 writer.writerow(["题目", "学生答案", "正确答案", "对错"])
                 for one in result[i]:
@@ -390,7 +390,7 @@ def found_upgrade(window):
             msg.exec_()
             if msg.clickedButton() == ok_btn:
                 os.execv(os.path.dirname(os.path.realpath(
-                    sys.argv[0]))+"\\Updater.exe", ("_",))
+                    sys.argv[0]))+"/Updater.exe", ("_",))
             else:
                 return STATUS.CANCEL
         else:
@@ -406,20 +406,20 @@ def found_upgrade(window):
 def download_updater(window):
     try:
         has_updater = os.path.isfile(os.path.dirname(os.path.realpath(
-            sys.argv[0]))+"\\Updater.exe")
+            sys.argv[0]))+"/Updater.exe")
         has_upgrade = os.path.isfile(os.path.dirname(os.path.realpath(
-            sys.argv[0]))+"\\Upgrade.exe")
+            sys.argv[0]))+"/Upgrade.exe")
         if (not has_updater) and (not has_upgrade):
             response = requests.get(
                 Values.update_url+"Updater.exe", allow_redirects=True)
             updater = open(os.path.dirname(os.path.realpath(
-                sys.argv[0]))+"\\Updater.exe", "wb")
+                sys.argv[0]))+"/Updater.exe", "wb")
             updater.write(response.content)
             updater.close()
 
         if has_upgrade:
             os.rename(os.path.dirname(os.path.realpath(
-                sys.argv[0]))+"\\Upgrade.exe", os.path.dirname(os.path.realpath(sys.argv[0]))+"\\Updater.exe")
+                sys.argv[0]))+"/Upgrade.exe", os.path.dirname(os.path.realpath(sys.argv[0]))+"/Updater.exe")
         return STATUS.OK
     except:
         QMessageBox.critical(
