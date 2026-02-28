@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
-import MainWindow
+from . import MainWindow
 import Tools
 import Values
 from Values import STATUS

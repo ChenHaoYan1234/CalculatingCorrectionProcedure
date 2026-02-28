@@ -36,7 +36,7 @@ class ImageData():
             "SELECT image, result  from IMAGE")
         for image, result in data:
             if image == img:
-                
+
                 return json.loads(result)
         return STATUS.NOTFOUND
 

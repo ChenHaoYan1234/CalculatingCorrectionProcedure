@@ -7,7 +7,7 @@ import time
 from typing import Any, Literal, Optional
 
 import requests
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QWidget
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 
 import Values
 from ImageData import ImageData
@@ -240,13 +240,13 @@ def resultParser(result: dict, window) -> list[list] | Literal[STATUS.ERROR]:
 
 
 def resultsParser(results: list, window) -> list[list[list[Any]]] | Literal[STATUS.ERROR]:
-    results_:list[list[list[Any]]] = []
+    results_:list[list[list]] = []
     for i in results:
         result = resultParser(i, window)
-        if STATUS.ERROR == result:
-            return STATUS.ERROR
-        else:
+        if result != STATUS.ERROR:
             results_.append(result)
+        else:
+            return STATUS.ERROR
     return results_
 
 

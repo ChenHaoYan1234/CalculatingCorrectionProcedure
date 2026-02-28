@@ -4,7 +4,7 @@ import sys
 
 import py7zr
 import requests
-from PyQt5.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 import Values
 

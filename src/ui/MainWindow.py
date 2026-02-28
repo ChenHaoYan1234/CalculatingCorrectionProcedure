@@ -2,10 +2,10 @@
 import os
 import sys
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import ImageData
-import SettingMenu
+from . import SettingMenu
 import Tools
 import Values
 from Values import STATUS
@@ -52,7 +52,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.Exit = QtWidgets.QPushButton(self.Main)
         self.Exit.setGeometry(QtCore.QRect(350, 350, 100, 40))
         self.Exit.setObjectName("Exit")
-        self.Exit.clicked.connect(QtCore.QCoreApplication.instance().quit)
+        self.Exit.clicked.connect(QtCore.QCoreApplication.instance().quit) # type: ignore
         self.Help = QtWidgets.QLabel(self.Main)
         self.Help.setGeometry(QtCore.QRect(100, 120, 400, 200))
         font = QtGui.QFont()
