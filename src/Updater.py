@@ -18,17 +18,17 @@ else:
 
 def download_update():
     update = requests.get(Values.update_url+"latest/", allow_redirects=True)
-    temp = open(temp_dir+"/update.7z", "wb")
+    temp = open(os.path.join(temp_dir, "update.7z"), "wb")
     temp.write(update.content)
     temp.close()
 
 
 def extra_file():
     update = py7zr.SevenZipFile(
-        temp_dir+"/update.7z", "r")
+        os.path.join(temp_dir, "update.7z"), "r")
     update.extractall(os.path.dirname(os.path.realpath(sys.argv[0]))+"/")
     update.close()
-    os.remove(temp_dir+"/update.7z")
+    os.remove(os.path.join(temp_dir, "update.7z"))
 
 
 def main():
@@ -42,8 +42,8 @@ def main():
             QMessageBox.StandardButton.Ok,
             QMessageBox.StandardButton.Ok
         )
-        os.execv(os.path.dirname(os.path.realpath(
-            sys.argv[0]))+"/Main.exe", ("first_run",))
+        os.execv(os.path.join(os.path.dirname(os.path.realpath(
+            sys.argv[0])), "Main.exe"), ("first_run",))
     except:
         QMessageBox.information(
             None,  # type: ignore
